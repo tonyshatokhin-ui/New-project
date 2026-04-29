@@ -286,6 +286,19 @@
   font-size: 0.86rem;
 }
 
+.city-three-slot-hint--inspect {
+  color: rgba(252, 246, 232, 0.98);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+  background: rgba(18, 10, 4, 0.58);
+  border: 1px solid rgba(255, 215, 133, 0.32);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(5px);
+}
+
 .city-inspect-slot-backdrop {
   position: absolute;
   inset: 0;
@@ -797,11 +810,15 @@
 }
 
 .city-social-box {
-  margin-top: 12px;
-  padding: 10px 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
   border-radius: 14px;
   background: rgba(201, 143, 57, 0.12);
   border: 1px solid rgba(255, 209, 102, 0.2);
+}
+
+.city-social-box .label + .label {
+  margin-top: 0.45rem;
 }
 
 .directive-grid {

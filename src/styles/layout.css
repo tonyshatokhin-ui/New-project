@@ -301,8 +301,13 @@
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 12px;
-  background: rgba(31, 17, 10, 0.3);
+  background: rgba(31, 17, 10, 0.38);
   text-align: center;
+}
+
+.city-resource-ribbon .flow-card .value {
+  font-size: 1.16rem;
+  letter-spacing: 0.01em;
 }
 
 .label {
