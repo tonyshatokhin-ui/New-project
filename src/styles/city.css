@@ -1,4 +1,22 @@
 /* --- City Scene --- */
+.city-screen {
+  min-height: 0;
+  /* Marble / terracotta palette — scoped to city view only (does not alter global :root in base.css). */
+  --city-ant-parchment: rgba(248, 236, 210, 0.96);
+  --city-ant-parchment-soft: rgba(235, 218, 190, 0.92);
+  --city-ant-parchment-dim: rgba(218, 200, 172, 0.88);
+  --city-ant-panel-overlay: rgba(38, 24, 16, 0.42);
+  --city-ant-panel-deep: rgba(48, 32, 22, 0.78);
+  --city-ant-edge-warm: rgba(212, 168, 98, 0.36);
+  --city-ant-edge-bright: rgba(232, 198, 118, 0.4);
+  --city-ant-gold: #d4a458;
+  --city-ant-gold-icon: #e8bc78;
+  --city-ant-dock-mid: rgba(26, 16, 10, 0.52);
+  --city-ant-dock-bot: rgba(22, 14, 8, 0.64);
+  --city-ant-scrim: rgba(22, 12, 6, 0.48);
+  --city-ant-shadow-strong: rgba(0, 0, 0, 0.22);
+}
+
 .city-scene {
   position: relative;
   min-height: 620px;
@@ -8,7 +26,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  background: rgba(32, 19, 12, 0.35);
+  background: var(--city-ant-panel-overlay);
 }
 
 .city-view-toolbar {
@@ -39,10 +57,6 @@
   grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(300px, 380px);
   gap: 14px;
   align-items: start;
-}
-
-.city-screen {
-  min-height: 0;
 }
 
 .city-column {
@@ -97,6 +111,21 @@
   padding: 0.5rem 0.62rem;
 }
 
+.city-screen .city-hub-tabs button {
+  background: linear-gradient(180deg, rgba(92, 62, 42, 0.95), rgba(52, 34, 24, 0.98));
+  color: var(--city-ant-parchment);
+  border: 1px solid var(--city-ant-edge-warm);
+  box-shadow: 0 2px 6px var(--city-ant-shadow-strong);
+}
+
+.city-screen .city-hub-tabs button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.city-screen .city-hub-tabs button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
 .city-hub-content {
   display: grid;
   gap: 10px;
@@ -123,15 +152,19 @@
   gap: 8px;
   padding: 10px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 226, 181, 0.14);
-  background: rgba(255, 248, 224, 0.04);
+  border: 1px solid var(--city-ant-edge-warm);
+  background: linear-gradient(
+    165deg,
+    rgba(248, 232, 204, 0.09) 0%,
+    rgba(62, 42, 28, 0.12) 100%
+  );
 }
 
 .city-action-modal-backdrop {
   position: absolute;
   inset: 0;
   z-index: 30;
-  background: rgba(20, 11, 6, 0.46);
+  background: var(--city-ant-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,8 +191,8 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 90% at 50% 86%, rgba(200, 175, 120, 0.36), rgba(200, 175, 120, 0) 62%),
-    linear-gradient(180deg, rgba(114, 153, 72, 0.62) 0%, rgba(123, 163, 80, 0.42) 35%, rgba(208, 187, 135, 0.36) 100%);
+    radial-gradient(120% 90% at 50% 86%, rgba(210, 188, 140, 0.34), rgba(200, 175, 120, 0) 62%),
+    linear-gradient(180deg, rgba(100, 128, 78, 0.55) 0%, rgba(118, 145, 88, 0.38) 35%, rgba(212, 195, 150, 0.34) 100%);
 }
 
 .city-three-wrap {
@@ -172,6 +205,20 @@
   height: 100%;
   display: block;
   cursor: grab;
+  /* Mild antiquity grading: softened saturation + warm sepia lift (Aegean / fresco vibe). */
+  filter: saturate(0.93) brightness(1.03) sepia(0.07) contrast(1.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .city-three-canvas {
+    filter: saturate(0.93) brightness(1.02) sepia(0.07) contrast(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .city-three-canvas {
+    filter: saturate(0.93) brightness(1.03) sepia(0.05) contrast(1.03);
+  }
 }
 
 .city-three-canvas.dragging {
@@ -196,13 +243,13 @@
   padding: 0 10px 10px;
   pointer-events: none;
   gap: 6px;
-  background: linear-gradient(180deg, transparent, rgba(22, 14, 8, 0.48) 42%, rgba(22, 14, 8, 0.62));
+  background: linear-gradient(180deg, transparent, var(--city-ant-dock-mid) 42%, var(--city-ant-dock-bot));
 }
 
 .city-scene-work-dock-heading {
   flex-shrink: 0;
   text-align: center;
-  color: rgba(245, 230, 205, 0.88);
+  color: var(--city-ant-parchment-soft);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   font-size: 0.8rem;
   margin-bottom: 2px;
@@ -223,9 +270,9 @@
   max-width: 200px;
   padding: 6px 8px 8px;
   border-radius: 12px;
-  background: rgba(48, 32, 20, 0.78);
-  border: 1px solid rgba(255, 207, 120, 0.28);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background: var(--city-ant-panel-deep);
+  border: 1px solid var(--city-ant-edge-warm);
+  box-shadow: 0 8px 16px var(--city-ant-shadow-strong);
   pointer-events: auto;
 }
 
@@ -243,7 +290,7 @@
   flex-shrink: 0;
   width: 1.05em;
   height: 1.05em;
-  color: #f2c98a;
+  color: var(--city-ant-gold-icon);
 }
 
 .city-scene-job-slider-icon .map-icon {
@@ -257,14 +304,14 @@
   font-size: 0.74rem;
   font-weight: 600;
   line-height: 1.15;
-  color: rgba(250, 238, 214, 0.95);
+  color: var(--city-ant-parchment);
   min-width: 0;
 }
 
 .city-scene-job-slider-count {
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
-  color: rgba(236, 220, 190, 0.85);
+  color: var(--city-ant-parchment-dim);
 }
 
 .city-three-overlay .district-slider {
@@ -287,13 +334,13 @@
 }
 
 .city-three-slot-hint--inspect {
-  color: rgba(252, 246, 232, 0.98);
+  color: var(--city-ant-parchment);
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1.35;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
-  background: rgba(18, 10, 4, 0.58);
-  border: 1px solid rgba(255, 215, 133, 0.32);
+  background: rgba(28, 16, 10, 0.62);
+  border: 1px solid var(--city-ant-edge-bright);
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(5px);
@@ -333,9 +380,9 @@
   place-items: center;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #f7edd5;
-  background: rgba(53, 32, 20, 0.78);
-  border: 1px solid rgba(255, 215, 133, 0.56);
+  color: var(--city-ant-parchment-soft);
+  background: var(--city-ant-panel-deep);
+  border: 1px solid var(--city-ant-edge-bright);
   box-shadow: 0 6px 14px rgba(20, 8, 4, 0.25);
 }
 
