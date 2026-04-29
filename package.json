@@ -1,0 +1,16 @@
+{
+  "name": "bronze-crown",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static strategy game prototype",
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint \"src/**/*.js\" \"tests/**/*.js\"",
+    "format": "prettier --check \"tests/**/*.js\" \"*.{js,json,md}\" \".github/workflows/**/*.yml\"",
+    "format:write": "prettier --write \"tests/**/*.js\" \"*.{js,json,md}\" \".github/workflows/**/*.yml\""
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "prettier": "^3.6.2"
+  }
+}
