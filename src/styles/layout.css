@@ -2,7 +2,7 @@
 .app-shell {
   max-width: 1460px;
   margin: 0 auto;
-  padding: 24px;
+  padding: clamp(12px, 2vw, 20px);
 }
 
 .header {
@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .title-group h1 {
@@ -22,9 +22,12 @@
 }
 
 .title-group p {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   color: var(--ink);
   font-weight: 600;
+  font-size: clamp(0.85rem, 1.2vw, 0.98rem);
+  line-height: 1.35;
+  max-width: 62ch;
 }
 
 .layout {
@@ -45,8 +48,14 @@
 
 .panel.soft { background: var(--panel-soft); }
 
-.active-stage-panel {
-  min-height: 880px;
+/* World map: let content define height so the hex map stays reachable without excess scroll. */
+.world-panel.active-stage-panel {
+  min-height: 0;
+}
+
+/* City view: keep a floor for the scene without forcing the whole app to a tall min-height. */
+.city-panel.active-stage-panel {
+  min-height: min(840px, 92vh);
 }
 
 .panel h2, .panel h3 {
