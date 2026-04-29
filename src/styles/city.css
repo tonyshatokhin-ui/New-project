@@ -171,7 +171,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  cursor: inherit;
+  cursor: grab;
 }
 
 .city-three-canvas.dragging {
@@ -184,8 +184,134 @@
   pointer-events: none;
 }
 
+.city-scene-work-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 10px 10px;
+  pointer-events: none;
+  gap: 6px;
+  background: linear-gradient(180deg, transparent, rgba(22, 14, 8, 0.48) 42%, rgba(22, 14, 8, 0.62));
+}
+
+.city-scene-work-dock-heading {
+  flex-shrink: 0;
+  text-align: center;
+  color: rgba(245, 230, 205, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.city-scene-work-dock-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.city-scene-job-slider {
+  flex: 1 1 140px;
+  min-width: min(148px, 38vw);
+  max-width: 200px;
+  padding: 6px 8px 8px;
+  border-radius: 12px;
+  background: rgba(48, 32, 20, 0.78);
+  border: 1px solid rgba(255, 207, 120, 0.28);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+}
+
+.city-scene-job-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.city-scene-job-slider-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
+  color: #f2c98a;
+}
+
+.city-scene-job-slider-icon .map-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.2;
+}
+
+.city-scene-job-slider-label {
+  flex: 1;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: rgba(250, 238, 214, 0.95);
+  min-width: 0;
+}
+
+.city-scene-job-slider-count {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(236, 220, 190, 0.85);
+}
+
+.city-three-overlay .district-slider {
+  width: 100%;
+}
+
+.city-three-slot-hint {
+  position: absolute;
+  bottom: 0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 94%);
+  padding: 0.45rem 0.65rem;
+  text-align: center;
+  pointer-events: none;
+  z-index: 4;
+  color: rgba(42, 30, 16, 0.92);
+  text-shadow: 0 1px 0 rgba(250, 240, 210, 0.35);
+  font-size: 0.86rem;
+}
+
+.city-inspect-slot-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  background: rgba(18, 10, 4, 0.38);
+}
+
+.city-inspect-slot-card {
+  max-width: min(380px, 92vw);
+  padding: 0.85rem 1rem 1rem;
+}
+
+.city-inspect-slot-card .muted {
+  opacity: 0.85;
+}
+
+.city-inspect-slot-status {
+  font-weight: 600;
+}
+
 .city-three-worker-chip {
   position: absolute;
+  z-index: 2;
   transform: translate(-50%, -50%);
   width: 26px;
   height: 26px;
