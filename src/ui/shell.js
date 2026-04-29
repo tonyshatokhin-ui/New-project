@@ -1,25 +1,65 @@
 ﻿function renderHeader() {
-  const header = el("div", { className: "header" });
-  const titleGroup = el("div", { className: "title-group" });
-  appendChildren(titleGroup, 
-    el("h1", {}, t("gameTitle")),
-    el("p", {}, t("gameSubtitle", { turn: state.turn })),
+  const header = el("div", { className: "header game-header" });
+  const turnPill = el("div", { className: "header-turn-pill" }, t("turnLabel", { turn: state.turn }));
+
+  const actions = el("div", { className: "action-row compact-actions compact-actions-primary" });
+  appendChildren(
+    actions,
+    button(t("worldMap"), () => {
+      uiState.headerMenuOpen = false;
+      switchView("world");
+    }, state.view === "world"),
+    button(t("cityButton", { city: getCityName(getSelectedCity()) }), () => {
+      uiState.headerMenuOpen = false;
+      switchView("city");
+    }, state.view === "city"),
+    button(t("endTurn"), () => {
+      uiState.headerMenuOpen = false;
+      nextTurn();
+    }, Boolean(state.world.pendingEncounter)),
   );
 
-  const actions = el("div", { className: "action-row" });
-  appendChildren(actions, 
-    button(t("worldMap"), () => switchView("world"), state.view === "world"),
-    button(t("cityButton", { city: getCityName(getSelectedCity()) }), () => switchView("city"), state.view === "city"),
-    button(t("turnLog"), toggleLog),
-    button(t("endTurn"), nextTurn, Boolean(state.world.pendingEncounter)),
-    button(t("resetRun"), resetGame),
-    button(t("mainMenu"), openMainMenu),
-    button(uiState.musicOn ? t("musicOn") : t("musicOff"), toggleMusic),
-    button(t("languageEn"), () => setLocale("en"), locale === "en"),
-    button(t("languageRu"), () => setLocale("ru"), locale === "ru"),
-  );
+  const menuWrap = el("div", { className: "header-menu-wrap" });
+  const menuToggle = button(t("manage"), () => {
+    uiState.headerMenuOpen = !uiState.headerMenuOpen;
+    render();
+  }, false);
+  menuToggle.classList.add("header-menu-toggle");
+  menuWrap.appendChild(menuToggle);
 
-  appendChildren(header, titleGroup, actions);
+  if (uiState.headerMenuOpen) {
+    const popup = el("div", { className: "header-menu-popup" });
+    appendChildren(
+      popup,
+      button(t("turnLog"), () => {
+        uiState.headerMenuOpen = false;
+        toggleLog();
+      }),
+      button(uiState.musicOn ? t("musicOn") : t("musicOff"), () => {
+        uiState.headerMenuOpen = false;
+        toggleMusic();
+      }),
+      button(t("languageEn"), () => {
+        uiState.headerMenuOpen = false;
+        setLocale("en");
+      }, locale === "en"),
+      button(t("languageRu"), () => {
+        uiState.headerMenuOpen = false;
+        setLocale("ru");
+      }, locale === "ru"),
+      button(t("resetRun"), () => {
+        uiState.headerMenuOpen = false;
+        resetGame();
+      }),
+      button(t("mainMenu"), () => {
+        uiState.headerMenuOpen = false;
+        openMainMenu();
+      }),
+    );
+    menuWrap.appendChild(popup);
+  }
+
+  appendChildren(header, turnPill, actions, menuWrap);
   return header;
 }
 
@@ -179,24 +219,27 @@ function renderPriorityActionsPanel(actions = collectPriorityActions()) {
 }
 
 function renderSidebar() {
-  const panel = el("div", { className: "panel soft" });
-  panel.appendChild(el("h2", {}, t("empire")));
+  const panel = el("div", { className: "panel soft sidebar-panel" });
+  const inAlertsMode = uiState.hudPanelTab === "alerts";
+  panel.appendChild(el("h2", {}, inAlertsMode ? t("priorityActionsTitle") : t("empire")));
 
-  const resources = el("div", { className: "resource-grid" });
-  [
-    [t("gold"), state.player.gold],
-    [t("culture"), state.player.culture],
-    [t("metricFood"), totalEmpireFood()],
-    [t("tradePower"), state.world.tradePower],
-    [t("prestige"), state.world.prestige],
-    [t("diplomacy"), state.world.diplomacy],
-    [t("crisis"), state.world.crisisPressure],
-  ].forEach(([labelText, value]) => {
-    const card = el("div", { className: "resource-card" });
-    appendChildren(card, el("strong", {}, labelText), el("div", { className: "value" }, String(value)));
-    resources.appendChild(card);
-  });
-  panel.appendChild(resources);
+  if (!inAlertsMode) {
+    const resources = el("div", { className: "resource-grid" });
+    [
+      [t("gold"), state.player.gold],
+      [t("culture"), state.player.culture],
+      [t("metricFood"), totalEmpireFood()],
+      [t("tradePower"), state.world.tradePower],
+      [t("prestige"), state.world.prestige],
+      [t("diplomacy"), state.world.diplomacy],
+      [t("crisis"), state.world.crisisPressure],
+    ].forEach(([labelText, value]) => {
+      const card = el("div", { className: "resource-card" });
+      appendChildren(card, el("strong", {}, labelText), el("div", { className: "value" }, String(value)));
+      resources.appendChild(card);
+    });
+    panel.appendChild(resources);
+  }
 
   const priorityActions = collectPriorityActions();
   const topTone = priorityActions.some((item) => item.tone === "danger")
@@ -213,6 +256,10 @@ function renderSidebar() {
   );
   appendChildren(prioritySection, priorityHead, renderPriorityActionsPanel(priorityActions));
   panel.appendChild(prioritySection);
+
+  if (inAlertsMode) {
+    return panel;
+  }
 
   panel.appendChild(sectionTitle(t("empireResourcesTitle")));
   const resourceList = el("div", { className: "policy-list" });
@@ -269,8 +316,53 @@ function renderSidebar() {
 }
 
 function renderMainStage() {
-  const stage = el("div", { className: "main-stage" });
-  stage.appendChild(state.view === "world" ? renderWorldView() : renderCityView(getSelectedCity()));
+  const stage = el("div", { className: "main-stage hud-main-stage" });
+  const content = el("div", { className: "hud-stage-content" });
+  content.appendChild(state.view === "world" ? renderWorldView() : renderCityView(getSelectedCity()));
+  stage.appendChild(content);
+  stage.appendChild(renderHudDock());
+  if (uiState.hudPanelOpen) {
+    stage.appendChild(renderHudOverlayPanel());
+  }
   return stage;
+}
+
+function renderHudDock() {
+  const wrap = el("div", { className: "hud-dock" });
+  const alertsCount = collectPriorityActions().length;
+  const alertsLabel = alertsCount > 0
+    ? `${t("priorityActionsTitle")} (${alertsCount})`
+    : t("priorityActionsTitle");
+  appendChildren(
+    wrap,
+    button(t("empire"), () => openHudPanel("empire"), false),
+    button(alertsLabel, () => openHudPanel("alerts"), false),
+  );
+  return wrap;
+}
+
+function renderHudOverlayPanel() {
+  const frame = el("div", { className: "hud-overlay-panel-frame" });
+  const closeBtn = button(t("close"), () => {
+    uiState.hudPanelOpen = false;
+    render();
+  }, false);
+  closeBtn.classList.add("hud-overlay-close");
+
+  const panel = renderSidebar();
+  panel.classList.add("hud-overlay-panel");
+  if (uiState.hudPanelTab === "alerts") {
+    panel.classList.add("hud-overlay-alerts");
+  }
+  frame.appendChild(closeBtn);
+  frame.appendChild(panel);
+  return frame;
+}
+
+function openHudPanel(tab) {
+  uiState.hudPanelTab = tab;
+  uiState.hudPanelOpen = true;
+  uiState.headerMenuOpen = false;
+  render();
 }
 
