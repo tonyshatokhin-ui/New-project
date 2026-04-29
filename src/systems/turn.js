@@ -1,6 +1,7 @@
 function nextTurn() {
   if (state.world.pendingEncounter) return;
   state.turn += 1;
+  if (typeof playTurnAdvanceSound === "function") playTurnAdvanceSound();
 
   state.player.cities.forEach((city) => {
     normalizeCitySocial(city);
@@ -57,6 +58,7 @@ function nextTurn() {
     if (RANDOM_EVENTS_ENABLED) {
       handleCityCrisis(city, foodDelta);
     }
+    processCityConstructionQueueAtTurnEnd(city);
   });
 
   applyTradeIncome();
@@ -70,6 +72,9 @@ function nextTurn() {
   refreshFactionKnowledge(state.world);
   if (RANDOM_EVENTS_ENABLED) {
     maybeWorldCrisis();
+  }
+  if (typeof triggerTurnFeedback === "function") {
+    triggerTurnFeedback();
   }
   render();
 }

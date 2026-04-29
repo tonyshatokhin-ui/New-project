@@ -45,6 +45,7 @@ function createCity(nameKey, roleKey, isCapital = false, tileId = null, customNa
       growthDiscount: 0,
     },
     buildings: [],
+    buildQueue: [],
     events: [],
   };
   initCitySocial(city);

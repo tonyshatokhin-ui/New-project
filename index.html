@@ -27,6 +27,30 @@
     <script src="src/ui/app-view.js"></script>
     <script src="src/ui/shell.js"></script>
     <script src="src/ui/world-view.js"></script>
+    <script type="module">
+      (async () => {
+        const candidates = [
+          "./node_modules/three/build/three.module.js",
+          "../node_modules/three/build/three.module.js",
+          "https://unpkg.com/three@0.164.1/build/three.module.js",
+          "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+        ];
+        for (const url of candidates) {
+          try {
+            const mod = await import(url);
+            if (mod) {
+              window.THREE = mod;
+              window.dispatchEvent(new Event("three-ready"));
+              return;
+            }
+          } catch (_) {
+            // try next source
+          }
+        }
+      })();
+    </script>
+    <script src="src/ui/city-3d-assets.js"></script>
+    <script src="src/ui/city-scene-3d.js"></script>
     <script src="src/ui/city-view.js"></script>
     <script src="src/ui/hex-inspector.js"></script>
     <script src="src/ui/drawers.js"></script>

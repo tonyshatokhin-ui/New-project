@@ -1,0 +1,824 @@
+/* --- City Scene --- */
+.city-scene {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(32, 19, 12, 0.35);
+}
+
+.city-view-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.city-view-toolbar h2 {
+  margin-bottom: 0;
+}
+
+.city-view-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.city-scene.inspect-mode {
+  min-height: min(90vh, 900px);
+  cursor: grab;
+  touch-action: none;
+}
+
+.city-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(300px, 380px);
+  gap: 14px;
+  align-items: start;
+}
+
+.city-screen {
+  min-height: 0;
+}
+
+.city-column {
+  min-height: 0;
+}
+
+.city-column-left,
+.city-column-right {
+  max-height: min(72vh, 760px);
+  overflow: auto;
+}
+
+.city-column-center {
+  min-height: 0;
+}
+
+.city-layout.inspect-mode {
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+.city-layout.inspect-mode .city-column-center {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.city-layout.inspect-mode .city-scene.inspect-mode {
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+.city-screen.inspect-mode {
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.city-hub-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.city-hub-tabs button {
+  padding: 0.5rem 0.62rem;
+}
+
+.city-hub-content {
+  display: grid;
+  gap: 10px;
+}
+
+.city-action-launcher {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.city-action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.city-action-buttons button {
+  padding: 0.62rem 0.7rem;
+}
+
+.city-action-summary {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 226, 181, 0.14);
+  background: rgba(255, 248, 224, 0.04);
+}
+
+.city-action-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: rgba(20, 11, 6, 0.46);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.city-action-modal {
+  width: min(920px, 96%);
+  max-height: 86%;
+  overflow: auto;
+}
+
+.city-action-modal-content {
+  display: grid;
+  gap: 12px;
+}
+
+.city-scene.inspect-mode.dragging {
+  cursor: grabbing;
+}
+
+.city-backdrop-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 86%, rgba(200, 175, 120, 0.36), rgba(200, 175, 120, 0) 62%),
+    linear-gradient(180deg, rgba(114, 153, 72, 0.62) 0%, rgba(123, 163, 80, 0.42) 35%, rgba(208, 187, 135, 0.36) 100%);
+}
+
+.city-three-wrap {
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.city-three-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: inherit;
+}
+
+.city-three-canvas.dragging {
+  cursor: grabbing;
+}
+
+.city-three-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.city-three-worker-chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f7edd5;
+  background: rgba(53, 32, 20, 0.78);
+  border: 1px solid rgba(255, 215, 133, 0.56);
+  box-shadow: 0 6px 14px rgba(20, 8, 4, 0.25);
+}
+
+.city-backdrop-svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.95;
+  transform: perspective(1300px) rotateX(9deg) translate(var(--scene-pan-x, 0px), var(--scene-pan-y, 0px)) scale(var(--scene-zoom, 1));
+  transform-origin: center center;
+  transition: transform 120ms ease-out;
+}
+
+.city-scene.inspect-mode .city-backdrop-svg {
+  /* zoom is controlled dynamically via --scene-zoom from JS */
+}
+
+/* Keep all city layers in one coordinate space so pan/zoom never desyncs slots and objects. */
+
+.city-layer.slots,
+.city-layer.buildings,
+.city-layer.overlay {
+  transform: skewX(-6deg) scaleY(0.92) translateY(-8px);
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.city-scene.inspect-mode.dragging .city-backdrop-svg {
+  transition: none;
+}
+
+.city-water-shimmer {
+  fill: none;
+  stroke: rgba(202, 240, 255, 0.34);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 8 14;
+  animation: waterDrift 7s linear infinite;
+}
+
+.city-bush {
+  fill: rgba(98, 129, 67, 0.66);
+}
+
+.city-fog-ridge {
+  fill: none;
+  stroke: rgba(217, 204, 172, 0.26);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.city-fence {
+  fill: none;
+  stroke: rgba(132, 95, 57, 0.72);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.city-post {
+  stroke: rgba(111, 78, 47, 0.78);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.city-amphora {
+  fill: rgba(163, 116, 72, 0.68);
+  stroke: rgba(93, 58, 35, 0.65);
+  stroke-width: 1.4;
+}
+
+.city-tree-canopy {
+  fill: rgba(95, 136, 66, 0.74);
+  stroke: rgba(58, 86, 39, 0.48);
+  stroke-width: 1.4;
+}
+
+.city-tree-canopy.deep {
+  fill: rgba(80, 119, 55, 0.84);
+}
+
+.city-tree-canopy.close {
+  fill: rgba(112, 154, 74, 0.84);
+  stroke-width: 1.8;
+}
+
+.city-tree-trunk {
+  fill: rgba(110, 74, 43, 0.78);
+}
+
+.city-grass {
+  fill: none;
+  stroke: rgba(128, 160, 87, 0.58);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.city-rock {
+  fill: rgba(146, 131, 105, 0.72);
+  stroke: rgba(87, 75, 56, 0.58);
+  stroke-width: 1.2;
+}
+
+.city-foreground-shadow {
+  fill: rgba(67, 45, 26, 0.2);
+}
+
+.city-foreground-ridge {
+  fill: none;
+  stroke: rgba(114, 89, 56, 0.42);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.city-ruin-line {
+  fill: none;
+  stroke: rgba(185, 167, 130, 0.68);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.city-ruin-shadow {
+  fill: rgba(80, 59, 37, 0.16);
+}
+
+.city-ruin-block {
+  fill: rgba(157, 138, 108, 0.66);
+  stroke: rgba(92, 75, 54, 0.46);
+  stroke-width: 1.2;
+}
+
+.city-bird {
+  fill: none;
+  stroke: rgba(240, 225, 190, 0.55);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.city-slot {
+  fill: rgba(169, 132, 84, 0.2);
+  stroke-width: 1.8;
+}
+
+.city-slot.locked {
+  stroke: rgba(225, 196, 149, 0.3);
+  fill: rgba(153, 118, 77, 0.14);
+}
+
+.city-slot.available {
+  stroke: rgba(255, 209, 102, 0.85);
+  fill: rgba(205, 157, 84, 0.24);
+  filter: drop-shadow(0 0 10px rgba(255, 215, 133, 0.22));
+}
+
+.city-slot-icon-stroke {
+  fill: none;
+  stroke: rgba(248, 231, 198, 0.86);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.city-building-shadow {
+  fill: rgba(26, 12, 7, 0.52);
+}
+
+.city-building-shadow-soft {
+  fill: rgba(46, 24, 13, 0.28);
+}
+
+.city-cast-shadow {
+  fill: rgba(52, 30, 18, 0.22);
+}
+
+.city-wall {
+  fill: #b9834e;
+  stroke: rgba(71, 38, 22, 0.72);
+  stroke-width: 2;
+}
+
+.city-wall-side {
+  fill: rgba(125, 81, 49, 0.88);
+  stroke: rgba(61, 33, 19, 0.56);
+  stroke-width: 1.6;
+}
+
+.city-wall-side.stone {
+  fill: rgba(127, 119, 107, 0.88);
+}
+
+.city-plinth-top {
+  fill: rgba(170, 141, 95, 0.54);
+  stroke: rgba(96, 70, 44, 0.55);
+  stroke-width: 1.2;
+}
+
+.city-plinth-side {
+  fill: rgba(108, 80, 49, 0.5);
+  stroke: rgba(72, 49, 28, 0.48);
+  stroke-width: 1.2;
+}
+
+.city-plinth-highlight {
+  fill: rgba(240, 219, 176, 0.18);
+}
+
+.city-roof {
+  filter: drop-shadow(0 2px 0 rgba(61, 34, 19, 0.24));
+}
+
+.city-wall.adobe {
+  fill: #c08f62;
+}
+
+.city-wall.stone {
+  fill: #a39683;
+}
+
+.city-roof {
+  fill: #a25934;
+  stroke: rgba(71, 38, 22, 0.72);
+  stroke-width: 2;
+}
+
+.city-roof.straw {
+  fill: #b78f58;
+}
+
+.city-roof.dark {
+  fill: #7c4c2d;
+}
+
+.city-mast {
+  fill: #6f4d2c;
+}
+
+.city-banner {
+  fill: #d7a046;
+}
+
+.city-column {
+  stroke: rgba(76, 46, 28, 0.8);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.city-engrave {
+  stroke: rgba(235, 214, 172, 0.35);
+  stroke-width: 1.2;
+}
+
+.city-smoke {
+  fill: rgba(244, 239, 224, 0.42);
+  animation: smokeRise 2.8s ease-in-out infinite;
+}
+
+.city-overlay-chip {
+  fill: rgba(53, 32, 20, 0.64);
+  stroke: rgba(255, 209, 102, 0.52);
+  stroke-width: 1.2;
+}
+
+.city-citizen-head {
+  fill: #eadbbd;
+}
+
+.city-citizen-limb {
+  fill: none;
+  stroke: #f4e5c6;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  transform-origin: 0px 2px;
+}
+
+.city-citizen-tool-line {
+  fill: none;
+  stroke: #e4c98f;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 4px -2px;
+}
+
+.city-worker-chip.job-fields .city-citizen {
+  animation: citizenSway 1.7s ease-in-out infinite;
+}
+
+.city-worker-chip.job-fields .city-citizen-tool {
+  animation: hoeMotion 1.2s ease-in-out infinite;
+}
+
+.city-worker-chip.job-mines .city-citizen-tool {
+  animation: pickaxeStrike 0.95s ease-in-out infinite;
+}
+
+.city-worker-chip.job-temples .city-citizen {
+  animation: prayMotion 1.8s ease-in-out infinite;
+}
+
+.city-worker-chip.job-market .city-citizen {
+  animation: merchantNod 1.6s ease-in-out infinite;
+}
+
+.city-worker-chip.job-ports .city-citizen-tool {
+  animation: mastSignal 1.4s ease-in-out infinite;
+}
+
+.city-worker-chip.job-barracks .city-citizen {
+  animation: guardDrill 0.9s ease-in-out infinite;
+}
+
+@keyframes citizenSway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(0.8px); }
+}
+
+@keyframes hoeMotion {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+@keyframes pickaxeStrike {
+  0%, 100% { transform: rotate(-5deg); }
+  45% { transform: rotate(16deg); }
+}
+
+@keyframes prayMotion {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.9px); }
+}
+
+@keyframes merchantNod {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-1px); }
+}
+
+@keyframes mastSignal {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(7deg); }
+}
+
+@keyframes guardDrill {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(1px); }
+}
+
+.city-overlay-count {
+  fill: rgba(58, 35, 20, 0.95);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Manrope", sans-serif;
+  paint-order: stroke;
+  stroke: rgba(255, 242, 214, 0.55);
+  stroke-width: 2px;
+}
+
+.city-scene[data-hover-building="houses"] .city-slot[data-building-id="houses"],
+.city-scene[data-hover-building="storehouse"] .city-slot[data-building-id="storehouse"],
+.city-scene[data-hover-building="granary"] .city-slot[data-building-id="granary"],
+.city-scene[data-hover-building="workshop"] .city-slot[data-building-id="workshop"],
+.city-scene[data-hover-building="market-square"] .city-slot[data-building-id="market-square"],
+.city-scene[data-hover-building="shrine"] .city-slot[data-building-id="shrine"],
+.city-scene[data-hover-building="dock"] .city-slot[data-building-id="dock"],
+.city-scene[data-hover-building="training-ground"] .city-slot[data-building-id="training-ground"] {
+  stroke: rgba(255, 235, 172, 1);
+  fill: rgba(255, 215, 105, 0.32);
+  stroke-width: 2.8;
+}
+
+.city-scene[data-hover-building="houses"] .city-building[data-building-id="houses"],
+.city-scene[data-hover-building="storehouse"] .city-building[data-building-id="storehouse"],
+.city-scene[data-hover-building="granary"] .city-building[data-building-id="granary"],
+.city-scene[data-hover-building="workshop"] .city-building[data-building-id="workshop"],
+.city-scene[data-hover-building="market-square"] .city-building[data-building-id="market-square"],
+.city-scene[data-hover-building="shrine"] .city-building[data-building-id="shrine"],
+.city-scene[data-hover-building="dock"] .city-building[data-building-id="dock"],
+.city-scene[data-hover-building="training-ground"] .city-building[data-building-id="training-ground"] {
+  filter: drop-shadow(0 0 12px rgba(255, 219, 129, 0.45));
+}
+
+@keyframes waterDrift {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 140; }
+}
+
+@keyframes smokeRise {
+  0% { transform: translateY(0); opacity: 0.2; }
+  40% { opacity: 0.5; }
+  100% { transform: translateY(-12px); opacity: 0; }
+}
+
+.reduce-motion .city-water-shimmer,
+.reduce-motion .city-smoke,
+.reduce-motion .city-citizen,
+.reduce-motion .city-citizen-tool {
+  animation: none;
+}
+
+.city-hero-card,
+.city-command-card,
+.city-directive-card,
+.city-district-group {
+  position: relative;
+  z-index: 10;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: rgba(58, 35, 21, 0.85);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.city-top-band {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.city-district-band {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.city-focus-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.city-focus-metrics .metric-card {
+  padding: 10px 12px;
+  background: rgba(255, 248, 224, 0.08);
+}
+
+.city-alert-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.city-alert {
+  border-radius: 14px;
+  padding: 9px 12px;
+  background: rgba(255, 248, 224, 0.06);
+  color: var(--text);
+}
+
+.city-alert.warn {
+  background: rgba(217, 107, 79, 0.18);
+}
+
+.city-alert.good {
+  background: rgba(159, 190, 114, 0.2);
+}
+
+.city-order-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 248, 224, 0.06);
+}
+
+.city-order-box.secondary {
+  background: rgba(201, 143, 57, 0.14);
+}
+
+.city-social-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(201, 143, 57, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.2);
+}
+
+.directive-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.directive-grid button {
+  padding: 0.8rem 0.9rem;
+}
+
+.city-subsection-header {
+  margin-top: 18px;
+}
+
+.city-district-group {
+  width: 100%;
+}
+
+.city-district-group-title {
+  margin-bottom: 12px;
+  font-family: "Cinzel", serif;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.district-card {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(53, 32, 20, 0.92);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.24);
+}
+
+.district-card + .district-card {
+  margin-top: 10px;
+}
+
+.district-card-head,
+.district-slider-meta,
+.city-pill-row,
+.tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.district-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.district-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95em;
+  height: 0.95em;
+  color: #f1c77a;
+}
+
+.district-title-icon .map-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.1;
+}
+
+.city-pill-row {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.city-pill-row .pill {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.city-pill-row .pill:first-child {
+  flex: 1 1 100%;
+}
+
+.district-slider-wrap {
+  margin-top: 10px;
+}
+
+.district-slider-meta {
+  margin-bottom: 6px;
+}
+
+.city-inline-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.city-inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95em;
+  height: 0.95em;
+}
+
+.city-inline-icon .map-icon {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.1;
+}
+
+.city-inline-icon.tone-economy .map-icon {
+  color: #f1c77a !important;
+}
+
+.city-inline-icon.tone-civic .map-icon {
+  color: #cbb8ff !important;
+}
+
+.city-inline-icon.tone-military .map-icon {
+  color: #ff8f79 !important;
+}
+
+.city-inline-icon.tone-growth .map-icon {
+  color: #b7db8d !important;
+}
+
+
+.city-support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.build-list,
+.trade-list,
+.tech-list {
+  display: grid;
+  gap: 10px;
+}
+

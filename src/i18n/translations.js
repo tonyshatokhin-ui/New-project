@@ -178,6 +178,9 @@ const I18N = {
     neutral: "Neutral",
     rival: "Rival",
     manage: "Manage",
+    hudPresetMinimal: "HUD: Minimal (F1)",
+    hudPresetStandard: "HUD: Standard (F2)",
+    hudPresetDetailed: "HUD: Detailed (F3)",
     buyTile: "Buy Tile (40g)",
     tradeRoutes: "Trade Routes",
     noRoutes: "No active deals. Build ships in a port city, then start exchanges here or from the city screen.",
@@ -213,6 +216,7 @@ const I18N = {
     army: "Army",
     recentEvents: "Recent Events",
     turnLabel: ({ turn }) => `Turn ${turn}`,
+    turnAdvanceSubtitle: "The realm updates orders and reports.",
     capitalTag: "[C]",
     openCity: "Open City",
     opened: "Opened",
@@ -1210,6 +1214,7 @@ Object.assign(I18N.ru, {
   recentEvents: "Последние события",
   turnLog: "Журнал ходов",
   turnLabel: ({ turn }) => `Ход ${turn}`,
+  turnAdvanceSubtitle: "Держава обновляет приказы и доклады.",
   capitalTag: "[Столица]",
   openCity: "Открыть город",
   opened: "Открыто",
@@ -1672,6 +1677,9 @@ Object.assign(I18N.ru, {
   ourRealm: "Наша держава",
   neutral: "Нейтрально",
   manage: "Управлять",
+  hudPresetMinimal: "HUD: Минимальный (F1)",
+  hudPresetStandard: "HUD: Стандартный (F2)",
+  hudPresetDetailed: "HUD: Детальный (F3)",
   buyTile: "Купить гекс (40 зол.)",
   noRoutes: "Активных сделок нет. Постройте корабли в портовом городе, затем запускайте обмен здесь или на экране города.",
   cancelRoute: "Отменить маршрут",
@@ -1737,12 +1745,16 @@ Object.assign(I18N.en, {
   cityInspectEnter: "Scene Mode",
   cityInspectExit: "Return UI",
   cityInspectReset: "Reset View",
+  cityInspectZoomIn: "Zoom +",
+  cityInspectZoomOut: "Zoom -",
 });
 
 Object.assign(I18N.ru, {
   cityInspectEnter: "Режим сцены",
   cityInspectExit: "Вернуть интерфейс",
   cityInspectReset: "Сбросить обзор",
+  cityInspectZoomIn: "Приблизить +",
+  cityInspectZoomOut: "Отдалить -",
 });
 
 Object.assign(I18N.en, {

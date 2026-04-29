@@ -47,6 +47,21 @@
         uiState.headerMenuOpen = false;
         setLocale("ru");
       }, locale === "ru"),
+      button(t("hudPresetMinimal"), () => {
+        uiState.hudPreset = "minimal";
+        uiState.headerMenuOpen = false;
+        render();
+      }, uiState.hudPreset === "minimal"),
+      button(t("hudPresetStandard"), () => {
+        uiState.hudPreset = "standard";
+        uiState.headerMenuOpen = false;
+        render();
+      }, uiState.hudPreset === "standard"),
+      button(t("hudPresetDetailed"), () => {
+        uiState.hudPreset = "detailed";
+        uiState.headerMenuOpen = false;
+        render();
+      }, uiState.hudPreset === "detailed"),
       button(t("resetRun"), () => {
         uiState.headerMenuOpen = false;
         resetGame();
@@ -72,6 +87,7 @@ function collectPriorityActions() {
   if (!scout && canRaiseScout()) {
     addAction({
       tone: "warn",
+      icon: "scout",
       title: t("noticeScoutMissing"),
       cta: t("actionRaiseScout"),
       onClick: () => focusRaiseScoutAction(),
@@ -79,6 +95,7 @@ function collectPriorityActions() {
   } else if (scout && scout.status === "idle") {
     addAction({
       tone: "warn",
+      icon: "scout",
       title: t("noticeScoutIdle"),
       detail: getScoutStatusText(scout),
       cta: t("actionOpenWorld"),
@@ -89,6 +106,7 @@ function collectPriorityActions() {
   if (state.player.gold < 0) {
     addAction({
       tone: "danger",
+      icon: "hostile",
       title: t("noticeGoldDeficit", { value: state.player.gold }),
       detail: t("cityOrderTrade"),
       cta: t("actionOpenCityView"),
@@ -100,6 +118,7 @@ function collectPriorityActions() {
   if (hostileCount > 0) {
     addAction({
       tone: "warn",
+      icon: "hostile",
       title: t("noticeHostilesActive", { count: hostileCount }),
       cta: t("actionOpenWorld"),
       onClick: () => switchView("world"),
@@ -114,12 +133,14 @@ function collectPriorityActions() {
     const readyBuilding = BUILDINGS.find((building) => {
       const builtCount = city.buildings.filter((item) => item === building.id).length;
       const uniqueLocked = building.unique && builtCount > 0;
-      return !uniqueLocked && buildingRequirementsMet(city, building) && city.hammerStock >= building.cost;
+      const queued = typeof isBuildingQueued === "function" && isBuildingQueued(city, building.id);
+      return !uniqueLocked && !queued && buildingRequirementsMet(city, building) && city.hammerStock >= building.cost;
     });
 
     if (foodSurplus < 0) {
       addAction({
         tone: "danger",
+        icon: "hostile",
         title: t("noticeCityHungry", { city: getCityName(city), value: signed(foodSurplus) }),
         cta: t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
@@ -129,6 +150,7 @@ function collectPriorityActions() {
     if (freeWorkers > 0) {
       addAction({
         tone: "warn",
+        icon: "worker",
         title: t("noticeIdleCitizens", { city: getCityName(city), count: freeWorkers }),
         cta: t("actionAssignWorkers"),
         onClick: () => focusCityWorkforce(city.nameKey),
@@ -138,6 +160,7 @@ function collectPriorityActions() {
     if (readyBuilding) {
       addAction({
         tone: "good",
+        icon: "city",
         title: t("noticeBuildingReady", { city: getCityName(city), building: t(readyBuilding.nameKey) }),
         cta: t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
@@ -147,6 +170,7 @@ function collectPriorityActions() {
     if (city.directiveChangeCount === 0) {
       addAction({
         tone: "good",
+        icon: "move",
         title: t("noticeDirectiveFree", { city: getCityName(city) }),
         cta: t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
@@ -156,6 +180,7 @@ function collectPriorityActions() {
     if (city.specializationChangeCount === 0) {
       addAction({
         tone: "good",
+        icon: "explore",
         title: t("noticeSpecializationFree", { city: getCityName(city) }),
         cta: t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
@@ -165,6 +190,7 @@ function collectPriorityActions() {
     if (idleWorkers > 0) {
       addAction({
         tone: "warn",
+        icon: "worker",
         title: t("noticeIdleWorkers", { city: getCityName(city), count: idleWorkers }),
         cta: t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
@@ -220,46 +246,22 @@ function renderPriorityActionsPanel(actions = collectPriorityActions()) {
 
 function renderSidebar() {
   const panel = el("div", { className: "panel soft sidebar-panel" });
-  const inAlertsMode = uiState.hudPanelTab === "alerts";
-  panel.appendChild(el("h2", {}, inAlertsMode ? t("priorityActionsTitle") : t("empire")));
-
-  if (!inAlertsMode) {
-    const resources = el("div", { className: "resource-grid" });
-    [
-      [t("gold"), state.player.gold],
-      [t("culture"), state.player.culture],
-      [t("metricFood"), totalEmpireFood()],
-      [t("tradePower"), state.world.tradePower],
-      [t("prestige"), state.world.prestige],
-      [t("diplomacy"), state.world.diplomacy],
-      [t("crisis"), state.world.crisisPressure],
-    ].forEach(([labelText, value]) => {
-      const card = el("div", { className: "resource-card" });
-      appendChildren(card, el("strong", {}, labelText), el("div", { className: "value" }, String(value)));
-      resources.appendChild(card);
-    });
-    panel.appendChild(resources);
-  }
-
-  const priorityActions = collectPriorityActions();
-  const topTone = priorityActions.some((item) => item.tone === "danger")
-    ? "danger"
-    : priorityActions.some((item) => item.tone === "warn")
-      ? "warn"
-      : "good";
-  const prioritySection = el("div", { className: `priority-panel ${topTone}` });
-  const priorityHead = el(
-    "div",
-    { className: "section-head priority-head" },
-    el("h3", {}, t("priorityActionsTitle")),
-    el("span", { className: `priority-badge ${topTone}` }, String(priorityActions.length)),
-  );
-  appendChildren(prioritySection, priorityHead, renderPriorityActionsPanel(priorityActions));
-  panel.appendChild(prioritySection);
-
-  if (inAlertsMode) {
-    return panel;
-  }
+  panel.appendChild(el("h2", {}, t("empire")));
+  const resources = el("div", { className: "resource-grid" });
+  [
+    [t("gold"), state.player.gold],
+    [t("culture"), state.player.culture],
+    [t("metricFood"), totalEmpireFood()],
+    [t("tradePower"), state.world.tradePower],
+    [t("prestige"), state.world.prestige],
+    [t("diplomacy"), state.world.diplomacy],
+    [t("crisis"), state.world.crisisPressure],
+  ].forEach(([labelText, value]) => {
+    const card = el("div", { className: "resource-card" });
+    appendChildren(card, el("strong", {}, labelText), el("div", { className: "value" }, String(value)));
+    resources.appendChild(card);
+  });
+  panel.appendChild(resources);
 
   panel.appendChild(sectionTitle(t("empireResourcesTitle")));
   const resourceList = el("div", { className: "policy-list" });
@@ -317,7 +319,7 @@ function renderSidebar() {
 
 function renderMainStage() {
   const stage = el("div", { className: "main-stage hud-main-stage" });
-  const content = el("div", { className: "hud-stage-content" });
+  const content = el("div", { className: `hud-stage-content ${state.view === "world" ? "hud-stage-content-world" : ""} hud-preset-${uiState.hudPreset}` });
   content.appendChild(state.view === "world" ? renderWorldView() : renderCityView(getSelectedCity()));
   stage.appendChild(content);
   stage.appendChild(renderHudDock());
@@ -329,14 +331,9 @@ function renderMainStage() {
 
 function renderHudDock() {
   const wrap = el("div", { className: "hud-dock" });
-  const alertsCount = collectPriorityActions().length;
-  const alertsLabel = alertsCount > 0
-    ? `${t("priorityActionsTitle")} (${alertsCount})`
-    : t("priorityActionsTitle");
   appendChildren(
     wrap,
     button(t("empire"), () => openHudPanel("empire"), false),
-    button(alertsLabel, () => openHudPanel("alerts"), false),
   );
   return wrap;
 }

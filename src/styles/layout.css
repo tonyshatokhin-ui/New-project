@@ -78,6 +78,10 @@
   scrollbar-width: thin;
 }
 
+.hud-stage-content-world {
+  overflow: hidden;
+}
+
 .hud-dock {
   position: absolute;
   z-index: 36;
@@ -165,6 +169,14 @@
 /* City view: keep a floor for the scene without forcing the whole app to a tall min-height. */
 .city-panel.active-stage-panel {
   min-height: min(840px, 92vh);
+}
+
+.city-panel.active-stage-panel.inspect-mode {
+  min-height: 0;
+  height: calc(100dvh - 92px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .panel h2, .panel h3 {
