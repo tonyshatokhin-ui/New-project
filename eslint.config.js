@@ -1,6 +1,6 @@
 module.exports = [
   {
-    files: ["src/main.js", "src/bootstrap.js"],
+    files: ["src/**/*.js"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",
@@ -18,17 +18,18 @@ module.exports = [
     },
   },
   {
-    files: ["src/**/*.js", "tests/**/*.js"],
-    ignores: ["src/main.js", "src/bootstrap.js"],
+    files: ["tests/**/*.js"],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "script",
       globals: {
-        window: "readonly",
-        document: "readonly",
-        localStorage: "readonly",
         console: "readonly",
         globalThis: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        require: "readonly",
+        module: "readonly",
+        exports: "readonly",
       },
     },
     rules: {
