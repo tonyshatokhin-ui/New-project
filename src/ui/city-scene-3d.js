@@ -141,8 +141,8 @@
         const onReady = () => {
           window.removeEventListener("three-ready", onReady);
           threeBootstrapState.done = true;
-          if (typeof window.render === "function") {
-            setTimeout(() => window.render(), 0);
+          if (typeof globalThis.render === "function") {
+            setTimeout(() => globalThis.render(), 0);
           }
           resolve(typeof window.THREE !== "undefined");
         };
@@ -176,8 +176,8 @@
         const ok = await loadThreeModule(url);
         if (ok && typeof window.THREE !== "undefined") {
           threeBootstrapState.done = true;
-          if (typeof window.render === "function") {
-            setTimeout(() => window.render(), 0);
+          if (typeof globalThis.render === "function") {
+            setTimeout(() => globalThis.render(), 0);
           }
           return true;
         }
@@ -187,8 +187,8 @@
           await loadScript(url);
           if (typeof window.THREE !== "undefined") {
             threeBootstrapState.done = true;
-            if (typeof window.render === "function") {
-              setTimeout(() => window.render(), 0);
+            if (typeof globalThis.render === "function") {
+              setTimeout(() => globalThis.render(), 0);
             }
             return true;
           }
@@ -746,7 +746,7 @@
     const glowActors = [];
     const waterRippleActors = [];
 
-    const state = {
+    const sceneState = {
       cityNameKey: null,
       inspectMode: false,
       panelHoverBuildingId: null,
@@ -1067,10 +1067,10 @@
       const fingerprint = WORKER_JOB_ORDER.map((id) =>
         String(Math.max(0, Math.floor(assignments?.[id] || 0))),
       ).join("|");
-      if (state.workerAssignmentsFingerprint === fingerprint) return;
-      state.workerAssignmentsFingerprint = fingerprint;
+      if (sceneState.workerAssignmentsFingerprint === fingerprint) return;
+      sceneState.workerAssignmentsFingerprint = fingerprint;
       clearGroup(workersRoot);
-      state.workerActors = [];
+      sceneState.workerActors = [];
       WORKER_JOB_ORDER.forEach((jobId) => {
         const count = Math.max(0, Math.floor(assignments?.[jobId] || 0));
         if (!count) return;
@@ -1082,7 +1082,7 @@
           const jitterZ = lane * 0.14 * ((i % 3) ? -1 : 1);
           const actor = createWorkerActor(jobId, base[0] + jitterX, base[1] + jitterZ, i);
           workersRoot.add(actor);
-          state.workerActors.push(actor);
+          sceneState.workerActors.push(actor);
         }
       });
     }
@@ -1144,7 +1144,7 @@
     }
 
     function animateEnvironment(timeSec) {
-      if (uiState.reduceMotion) {
+      if (globalThis.uiState.reduceMotion) {
         treeInstances.rotation.y = 0;
         grass.material.color.setRGB(1, 1, 1);
         river.material.roughness = 0.2;
@@ -1209,7 +1209,7 @@
     }
 
     function animateWorkers(timeSec) {
-      state.workerActors.forEach((actor) => {
+      sceneState.workerActors.forEach((actor) => {
         const u = actor.userData;
         if (!u) return;
         const cycle = timeSec * u.speed + u.phase;
@@ -1475,26 +1475,26 @@
     }
 
     function addBuildingForSlot(slotId, slotX, slotZ) {
-      if (state.builtById.has(slotId) || state.pendingById.has(slotId)) return;
+      if (sceneState.builtById.has(slotId) || sceneState.pendingById.has(slotId)) return;
       const token = Symbol(slotId);
-      state.pendingById.set(slotId, token);
+      sceneState.pendingById.set(slotId, token);
       assets.createBuildingAsync(slotId).then((model) => {
-        if (state.pendingById.get(slotId) !== token) return;
-        state.pendingById.delete(slotId);
-        if (state.builtById.has(slotId)) return;
+        if (sceneState.pendingById.get(slotId) !== token) return;
+        sceneState.pendingById.delete(slotId);
+        if (sceneState.builtById.has(slotId)) return;
         model.position.set(slotX, 0, slotZ);
         model.scale.set(BUILT_SLOT_MODEL_SCALE, BUILT_SLOT_MODEL_SCALE, BUILT_SLOT_MODEL_SCALE);
         model.userData.pickSlotId = slotId;
         builtRoot.add(model);
-        state.builtById.set(slotId, model);
+        sceneState.builtById.set(slotId, model);
         draw();
       });
     }
 
     function syncCity(city) {
       if (!city) return;
-      if (state.cityNameKey !== city.nameKey) {
-        state.cityNameKey = city.nameKey;
+      if (sceneState.cityNameKey !== city.nameKey) {
+        sceneState.cityNameKey = city.nameKey;
         const citySeed = seedFromCity(city.nameKey);
         populateDecor(citySeed);
         populateAtmosphere(citySeed ^ 0xa51f9f);
@@ -1504,21 +1504,21 @@
       const queue = Array.isArray(city.buildQueue) ? city.buildQueue : [];
       rebuildDynamicBoundary(builtSet);
 
-      state.builtById.forEach((model, id) => {
+      sceneState.builtById.forEach((model, id) => {
         if (!builtSet.has(id)) {
           removeModel(model);
-          state.builtById.delete(id);
+          sceneState.builtById.delete(id);
         }
       });
       clearGroup(plannedRoot);
       clearGroup(constructionRoot);
-      state.plannedById.clear();
-      state.pendingById.forEach((_, id) => {
-        if (!builtSet.has(id)) state.pendingById.delete(id);
+      sceneState.plannedById.clear();
+      sceneState.pendingById.forEach((_, id) => {
+        if (!builtSet.has(id)) sceneState.pendingById.delete(id);
       });
 
       SLOT_LAYOUT_3D.forEach((slot) => {
-        if (builtSet.has(slot.id) && !state.builtById.has(slot.id) && !state.pendingById.has(slot.id)) {
+        if (builtSet.has(slot.id) && !sceneState.builtById.has(slot.id) && !sceneState.pendingById.has(slot.id)) {
           addBuildingForSlot(slot.id, slot.x, slot.z);
         }
 
@@ -1534,7 +1534,7 @@
         const plannedModel = createPlannedGhost(slot.id, queueIndex > 0);
         plannedModel.position.set(slot.x, 0, slot.z);
         plannedRoot.add(plannedModel);
-        state.plannedById.set(slot.id, plannedModel);
+        sceneState.plannedById.set(slot.id, plannedModel);
       });
 
       slotMarkers.forEach((marker, id) => {
@@ -1582,7 +1582,7 @@
     }
 
     function effectiveAccentBuildingId() {
-      return state.panelHoverBuildingId || state.mapHoverSlotId || null;
+      return sceneState.panelHoverBuildingId || sceneState.mapHoverSlotId || null;
     }
 
     function refreshAccentSlotVisuals() {
@@ -1596,11 +1596,11 @@
 
       cityCore.scale.set(0.56, 0.56, 0.56);
 
-      state.builtById.forEach((mesh, slotId) => {
+      sceneState.builtById.forEach((mesh, slotId) => {
         const active = slotId === accent;
         mesh.scale.setScalar(active ? BUILT_SLOT_MODEL_SCALE_HIGHLIGHT : BUILT_SLOT_MODEL_SCALE);
       });
-      state.plannedById.forEach((mesh, slotId) => {
+      sceneState.plannedById.forEach((mesh, slotId) => {
         const active = slotId === accent;
         mesh.scale.setScalar(active ? BUILT_SLOT_MODEL_SCALE * 1.12 : BUILT_SLOT_MODEL_SCALE);
       });
@@ -1614,26 +1614,26 @@
     }
 
     function setHighlightedBuilding(buildingId) {
-      state.panelHoverBuildingId = buildingId || null;
+      sceneState.panelHoverBuildingId = buildingId || null;
       refreshAccentSlotVisuals();
     }
 
     function flushMapHoverProbe() {
       hoverRaf = null;
-      if (!state.inspectMode) return;
+      if (!sceneState.inspectMode) return;
       if (dragSession?.moved) return;
       const id = pickSlotFromXY(pendingHoverX, pendingHoverY);
-      if (state.mapHoverSlotId === id) {
+      if (sceneState.mapHoverSlotId === id) {
         renderer.domElement.style.cursor = id ? "pointer" : "grab";
         return;
       }
-      state.mapHoverSlotId = id;
+      sceneState.mapHoverSlotId = id;
       renderer.domElement.style.cursor = id ? "pointer" : "grab";
       refreshAccentSlotVisuals();
     }
 
     function scheduleMapHoverProbe(clientX, clientY) {
-      if (!state.inspectMode) return;
+      if (!sceneState.inspectMode) return;
       pendingHoverX = clientX;
       pendingHoverY = clientY;
       if (hoverRaf !== null) return;
@@ -1641,12 +1641,12 @@
     }
 
     function onCanvasPointerDown(event) {
-      if (event.button !== 0 || !state.inspectMode) return;
+      if (event.button !== 0 || !sceneState.inspectMode) return;
       dragSession = {
         x: event.clientX,
         y: event.clientY,
-        panX: uiState.cityScenePan?.x || 0,
-        panY: uiState.cityScenePan?.y || 0,
+        panX: globalThis.uiState.cityScenePan?.x || 0,
+        panY: globalThis.uiState.cityScenePan?.y || 0,
         moved: false,
       };
       renderer.domElement.setPointerCapture?.(event.pointerId);
@@ -1660,15 +1660,15 @@
       if (!dragSession.moved && Math.hypot(dx, dy) > 6) {
         dragSession.moved = true;
         renderer.domElement.classList.add("dragging");
-        if (state.mapHoverSlotId) {
-          state.mapHoverSlotId = null;
+        if (sceneState.mapHoverSlotId) {
+          sceneState.mapHoverSlotId = null;
           refreshAccentSlotVisuals();
         }
       }
       if (dragSession.moved) {
         const nextX = clamp(dragSession.panX + dx, -420, 420);
         const nextY = clamp(dragSession.panY + dy, -300, 300);
-        uiState.cityScenePan = { x: nextX, y: nextY };
+        globalThis.uiState.cityScenePan = { x: nextX, y: nextY };
         draw();
       }
     }
@@ -1689,11 +1689,11 @@
         cancelAnimationFrame(hoverRaf);
         hoverRaf = null;
       }
-      if (state.mapHoverSlotId) {
-        state.mapHoverSlotId = null;
+      if (sceneState.mapHoverSlotId) {
+        sceneState.mapHoverSlotId = null;
         refreshAccentSlotVisuals();
       }
-      if (state.inspectMode) renderer.domElement.style.cursor = "grab";
+      if (sceneState.inspectMode) renderer.domElement.style.cursor = "grab";
     }
 
     renderer.domElement.addEventListener("pointerdown", onCanvasPointerDown);
@@ -1703,9 +1703,9 @@
     renderer.domElement.addEventListener("pointerleave", onCanvasPointerLeave);
 
     function applyView() {
-      const panX = uiState.cityScenePan?.x || 0;
-      const panY = uiState.cityScenePan?.y || 0;
-      const zoom = uiState.citySceneZoom || 1;
+      const panX = globalThis.uiState.cityScenePan?.x || 0;
+      const panY = globalThis.uiState.cityScenePan?.y || 0;
+      const zoom = globalThis.uiState.citySceneZoom || 1;
       cityRoot.position.x = panX * 0.018;
       cityRoot.position.z = panY * 0.018;
       camera.zoom = clamp(1 / zoom, 0.66, 1.9);
@@ -1729,15 +1729,15 @@
     animateFrame();
 
     function sync(payload) {
-      state.inspectMode = Boolean(payload.inspectMode);
+      sceneState.inspectMode = Boolean(payload.inspectMode);
       slotPickHandler = typeof payload.onSlotPicked === "function" ? payload.onSlotPicked : null;
-      state.panelHoverBuildingId = payload.highlightedBuildingId || null;
+      sceneState.panelHoverBuildingId = payload.highlightedBuildingId || null;
       if ("onWorkerChipLayout" in payload) {
         notifyWorkerChipLayout =
           typeof payload.onWorkerChipLayout === "function" ? payload.onWorkerChipLayout : null;
       }
-      if (!state.inspectMode) {
-        state.mapHoverSlotId = null;
+      if (!sceneState.inspectMode) {
+        sceneState.mapHoverSlotId = null;
         renderer.domElement.style.cursor = "";
       } else {
         renderer.domElement.style.cursor = "grab";

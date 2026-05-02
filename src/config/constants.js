@@ -13,6 +13,12 @@ function getStoredSettings() {
 }
 
 const storedSettings = getStoredSettings();
+
+function normalizeMapLayers(raw) {
+  const base = { terrain: true, borders: true, resources: true, units: true };
+  if (!raw || typeof raw !== "object") return { ...base };
+  return { ...base, ...raw };
+}
 const CITY_RENDER_MODE_OPTIONS = {
   SVG: "svg",
   THREE: "three",
@@ -34,7 +40,6 @@ const uiState = {
   hudPanelOpen: false,
   hudPanelTab: "alerts",
   hudPreset: "standard",
-  cityHubTab: "workers",
   cityActionModal: null,
   cityActionLast: "workers",
   turnTransition: null,
@@ -48,4 +53,30 @@ const uiState = {
   workerChipLayoutByCity: {},
   cityRenderMode: storedSettings.cityRenderMode || CITY_RENDER_MODE_OPTIONS.THREE,
   toast: null,
+  /** After victory modal is acknowledged; hides overlay until next run or new victory. */
+  runVictoryModalDismissed: true,
+  mapLayers: normalizeMapLayers(storedSettings.mapLayers),
+  /** Which nation row is expanded in the world panel (`faction.id` or null). */
+  nationsExpandedId: null,
+  /** `strict` | `soft` | `off` — end-turn guard (see `requestEndTurn`). */
+  turnEndGuard: ["strict", "soft", "off"].includes(storedSettings.turnEndGuard)
+    ? storedSettings.turnEndGuard
+    : "strict",
+  turnEndModalOpen: false,
+  /** First-run guided steps (0–3); complete when player ends first turn or dismisses. */
+  onboardingStep: 0,
+  /** After nextTurn, show compact empire delta panel until dismissed. */
+  turnSummaryOpen: false,
+  /** Full-screen reference from Manage menu. */
+  encyclopediaOpen: false,
 };
+
+Object.assign(globalThis, {
+  uiState,
+  CITY_RENDER_MODE_OPTIONS,
+  RANDOM_EVENTS_ENABLED,
+  INTRO_STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
+  STORAGE_KEY,
+  DEFAULT_LOCALE,
+});

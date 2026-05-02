@@ -1,115 +1,159 @@
-﻿function renderHeader() {
-  const header = el("div", { className: "header game-header" });
-  const turnPill = el("div", { className: "header-turn-pill" }, t("turnLabel", { turn: state.turn }));
+﻿import { getLocale } from "../i18n/i18n.js";
+
+function renderHeader() {
+  const header = el("div", { className: "header game-header game-header--stacked" });
+  const headerRow = el("div", { className: "header-row" });
+  const turnPill = el("div", { id: "header-turn-pill", className: "header-turn-pill tabular-nums" }, globalThis.t("turnLabel", { turn: globalThis.state.turn }));
 
   const actions = el("div", { className: "action-row compact-actions compact-actions-primary" });
   appendChildren(
     actions,
-    button(t("worldMap"), () => {
-      uiState.headerMenuOpen = false;
+    button(globalThis.t("worldMap"), () => {
+      globalThis.uiState.headerMenuOpen = false;
       switchView("world");
-    }, state.view === "world"),
-    button(t("cityButton", { city: getCityName(getSelectedCity()) }), () => {
-      uiState.headerMenuOpen = false;
+    }, globalThis.state.view === "world"),
+    button(globalThis.t("cityButton", { city: getCityName(getSelectedCity()) }), () => {
+      globalThis.uiState.headerMenuOpen = false;
       switchView("city");
-    }, state.view === "city"),
-    button(t("endTurn"), () => {
-      uiState.headerMenuOpen = false;
-      nextTurn();
-    }, Boolean(state.world.pendingEncounter)),
+    }, globalThis.state.view === "city"),
+    button(
+      globalThis.t("endTurn"),
+      () => {
+        globalThis.uiState.headerMenuOpen = false;
+        requestEndTurn();
+      },
+      Boolean(globalThis.state.world.pendingEncounter
+        || (typeof turnEventsBlocked === "function" && turnEventsBlocked())),
+    ),
   );
 
   const menuWrap = el("div", { className: "header-menu-wrap" });
-  const menuToggle = button(t("manage"), () => {
-    uiState.headerMenuOpen = !uiState.headerMenuOpen;
-    render();
+  const menuToggle = button(globalThis.t("manage"), () => {
+    globalThis.uiState.headerMenuOpen = !globalThis.uiState.headerMenuOpen;
+    globalThis.render();
   }, false);
   menuToggle.classList.add("header-menu-toggle");
   menuWrap.appendChild(menuToggle);
 
-  if (uiState.headerMenuOpen) {
+  if (globalThis.uiState.headerMenuOpen) {
     const popup = el("div", { className: "header-menu-popup" });
     appendChildren(
       popup,
-      button(t("turnLog"), () => {
-        uiState.headerMenuOpen = false;
+      button(globalThis.t("turnLog"), () => {
+        globalThis.uiState.headerMenuOpen = false;
         toggleLog();
       }),
-      button(uiState.musicOn ? t("musicOn") : t("musicOff"), () => {
-        uiState.headerMenuOpen = false;
+      button(globalThis.t("encyclopediaOpen"), () => {
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.uiState.encyclopediaOpen = true;
+        globalThis.render();
+      }, false),
+      button(globalThis.t("menuOpenEmpireDrawer"), () => {
+        globalThis.uiState.headerMenuOpen = false;
+        openHudPanel("empire");
+      }, false),
+      button(globalThis.uiState.musicOn ? globalThis.t("musicOn") : globalThis.t("musicOff"), () => {
+        globalThis.uiState.headerMenuOpen = false;
         toggleMusic();
       }),
-      button(t("languageEn"), () => {
-        uiState.headerMenuOpen = false;
-        setLocale("en");
-      }, locale === "en"),
-      button(t("languageRu"), () => {
-        uiState.headerMenuOpen = false;
-        setLocale("ru");
-      }, locale === "ru"),
-      button(t("hudPresetMinimal"), () => {
-        uiState.hudPreset = "minimal";
-        uiState.headerMenuOpen = false;
-        render();
-      }, uiState.hudPreset === "minimal"),
-      button(t("hudPresetStandard"), () => {
-        uiState.hudPreset = "standard";
-        uiState.headerMenuOpen = false;
-        render();
-      }, uiState.hudPreset === "standard"),
-      button(t("hudPresetDetailed"), () => {
-        uiState.hudPreset = "detailed";
-        uiState.headerMenuOpen = false;
-        render();
-      }, uiState.hudPreset === "detailed"),
-      button(t("resetRun"), () => {
-        uiState.headerMenuOpen = false;
+      button(globalThis.t("languageEn"), () => {
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.setLocale("en");
+      }, getLocale() === "en"),
+      button(globalThis.t("languageRu"), () => {
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.setLocale("ru");
+      }, getLocale() === "ru"),
+      button(globalThis.t("hudPresetMinimal"), () => {
+        globalThis.uiState.hudPreset = "minimal";
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.render();
+      }, globalThis.uiState.hudPreset === "minimal"),
+      button(globalThis.t("hudPresetStandard"), () => {
+        globalThis.uiState.hudPreset = "standard";
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.render();
+      }, globalThis.uiState.hudPreset === "standard"),
+      button(globalThis.t("hudPresetDetailed"), () => {
+        globalThis.uiState.hudPreset = "detailed";
+        globalThis.uiState.headerMenuOpen = false;
+        globalThis.render();
+      }, globalThis.uiState.hudPreset === "detailed"),
+      button(globalThis.t("turnEndGuardStrict"), () => {
+        globalThis.uiState.turnEndGuard = "strict";
+        globalThis.uiState.headerMenuOpen = false;
+        persistSettings();
+        globalThis.render();
+      }, globalThis.uiState.turnEndGuard === "strict"),
+      button(globalThis.t("turnEndGuardSoft"), () => {
+        globalThis.uiState.turnEndGuard = "soft";
+        globalThis.uiState.headerMenuOpen = false;
+        persistSettings();
+        globalThis.render();
+      }, globalThis.uiState.turnEndGuard === "soft"),
+      button(globalThis.t("turnEndGuardOff"), () => {
+        globalThis.uiState.turnEndGuard = "off";
+        globalThis.uiState.headerMenuOpen = false;
+        persistSettings();
+        globalThis.render();
+      }, globalThis.uiState.turnEndGuard === "off"),
+      button(globalThis.t("resetRun"), () => {
+        globalThis.uiState.headerMenuOpen = false;
         resetGame();
       }),
-      button(t("mainMenu"), () => {
-        uiState.headerMenuOpen = false;
+      button(globalThis.t("mainMenu"), () => {
+        globalThis.uiState.headerMenuOpen = false;
         openMainMenu();
       }),
     );
     menuWrap.appendChild(popup);
   }
 
-  appendChildren(header, turnPill, actions, menuWrap);
+  appendChildren(headerRow, turnPill, actions, menuWrap);
+  const victoryHint = el(
+    "div",
+    { className: "header-victory-hint muted", role: "note" },
+    globalThis.t("hudVictoryHint"),
+  );
+  appendChildren(header, headerRow, victoryHint);
   return header;
 }
 
-function collectPriorityActions() {
+/** turnBlockLevel: 2 = soft+strict, 1 = strict only, 0 = never blocks end turn */
+function collectAllPriorityActions() {
   const actions = [];
   const addAction = (item) => actions.push(item);
-  const capital = getCapitalCity();
   const scout = getPrimaryScout();
 
   if (!scout && canRaiseScout()) {
     addAction({
       tone: "warn",
+      turnBlockLevel: 1,
       icon: "scout",
-      title: t("noticeScoutMissing"),
-      cta: t("actionRaiseScout"),
+      title: globalThis.t("noticeScoutMissing"),
+      cta: globalThis.t("actionRaiseScout"),
       onClick: () => focusRaiseScoutAction(),
     });
   } else if (scout && scout.status === "idle") {
     addAction({
       tone: "warn",
+      turnBlockLevel: 1,
       icon: "scout",
-      title: t("noticeScoutIdle"),
+      title: globalThis.t("noticeScoutIdle"),
       detail: getScoutStatusText(scout),
-      cta: t("actionOpenWorld"),
+      cta: globalThis.t("actionOpenWorld"),
       onClick: () => switchView("world"),
     });
   }
 
-  if (state.player.gold < 0) {
+  if (globalThis.state.player.gold < 0) {
     addAction({
       tone: "danger",
+      turnBlockLevel: 2,
       icon: "hostile",
-      title: t("noticeGoldDeficit", { value: state.player.gold }),
-      detail: t("cityOrderTrade"),
-      cta: t("actionOpenCityView"),
+      title: globalThis.t("noticeGoldDeficit", { value: globalThis.state.player.gold }),
+      detail: globalThis.t("cityOrderTrade"),
+      cta: globalThis.t("actionOpenCityView"),
       onClick: () => openCity(getSelectedCity().nameKey),
     });
   }
@@ -118,14 +162,15 @@ function collectPriorityActions() {
   if (hostileCount > 0) {
     addAction({
       tone: "warn",
+      turnBlockLevel: 0,
       icon: "hostile",
-      title: t("noticeHostilesActive", { count: hostileCount }),
-      cta: t("actionOpenWorld"),
+      title: globalThis.t("noticeHostilesActive", { count: hostileCount }),
+      cta: globalThis.t("actionOpenWorld"),
       onClick: () => switchView("world"),
     });
   }
 
-  state.player.cities.forEach((city) => {
+  globalThis.state.player.cities.forEach((city) => {
     const yieldData = computeCityYield(city);
     const foodSurplus = foodSurplusForCity(yieldData, city);
     const freeWorkers = Math.max(0, city.population - assignedWorkers(city));
@@ -140,9 +185,32 @@ function collectPriorityActions() {
     if (foodSurplus < 0) {
       addAction({
         tone: "danger",
+        turnBlockLevel: 2,
         icon: "hostile",
-        title: t("noticeCityHungry", { city: getCityName(city), value: signed(foodSurplus) }),
-        cta: t("actionOpenCity", { city: getCityName(city) }),
+        title: globalThis.t("noticeCityHungry", { city: getCityName(city), value: signed(foodSurplus) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
+        onClick: () => openCity(city.nameKey),
+      });
+    }
+
+    if (typeof canTrainWorker === "function" && canTrainWorker(city)) {
+      addAction({
+        tone: "warn",
+        turnBlockLevel: 1,
+        icon: "worker",
+        title: globalThis.t("turnBlockWorkerTrainAvailable", { city: getCityName(city) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
+        onClick: () => openCity(city.nameKey),
+      });
+    }
+
+    if (typeof canTrainSettler === "function" && canTrainSettler(city)) {
+      addAction({
+        tone: "warn",
+        turnBlockLevel: 1,
+        icon: "settler",
+        title: globalThis.t("turnBlockSettlerTrainAvailable", { city: getCityName(city) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
       });
     }
@@ -150,9 +218,10 @@ function collectPriorityActions() {
     if (freeWorkers > 0) {
       addAction({
         tone: "warn",
+        turnBlockLevel: 1,
         icon: "worker",
-        title: t("noticeIdleCitizens", { city: getCityName(city), count: freeWorkers }),
-        cta: t("actionAssignWorkers"),
+        title: globalThis.t("noticeIdleCitizens", { city: getCityName(city), count: freeWorkers }),
+        cta: globalThis.t("actionAssignWorkers"),
         onClick: () => focusCityWorkforce(city.nameKey),
       });
     }
@@ -160,9 +229,10 @@ function collectPriorityActions() {
     if (readyBuilding) {
       addAction({
         tone: "good",
+        turnBlockLevel: 1,
         icon: "city",
-        title: t("noticeBuildingReady", { city: getCityName(city), building: t(readyBuilding.nameKey) }),
-        cta: t("actionOpenCity", { city: getCityName(city) }),
+        title: globalThis.t("noticeBuildingReady", { city: getCityName(city), building: globalThis.t(readyBuilding.nameKey) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
       });
     }
@@ -170,9 +240,10 @@ function collectPriorityActions() {
     if (city.directiveChangeCount === 0) {
       addAction({
         tone: "good",
+        turnBlockLevel: 0,
         icon: "move",
-        title: t("noticeDirectiveFree", { city: getCityName(city) }),
-        cta: t("actionOpenCity", { city: getCityName(city) }),
+        title: globalThis.t("noticeDirectiveFree", { city: getCityName(city) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
       });
     }
@@ -180,9 +251,10 @@ function collectPriorityActions() {
     if (city.specializationChangeCount === 0) {
       addAction({
         tone: "good",
+        turnBlockLevel: 0,
         icon: "explore",
-        title: t("noticeSpecializationFree", { city: getCityName(city) }),
-        cta: t("actionOpenCity", { city: getCityName(city) }),
+        title: globalThis.t("noticeSpecializationFree", { city: getCityName(city) }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
       });
     }
@@ -190,44 +262,76 @@ function collectPriorityActions() {
     if (idleWorkers > 0) {
       addAction({
         tone: "warn",
+        turnBlockLevel: 1,
         icon: "worker",
-        title: t("noticeIdleWorkers", { city: getCityName(city), count: idleWorkers }),
-        cta: t("actionOpenCity", { city: getCityName(city) }),
+        title: globalThis.t("noticeIdleWorkers", { city: getCityName(city), count: idleWorkers }),
+        cta: globalThis.t("actionOpenCity", { city: getCityName(city) }),
         onClick: () => openCity(city.nameKey),
       });
     }
   });
 
+  return actions;
+}
+
+function collectPriorityActions() {
   const priority = { danger: 0, warn: 1, good: 2 };
-  return actions
+  return collectAllPriorityActions()
     .sort((left, right) => (priority[left.tone] ?? 9) - (priority[right.tone] ?? 9))
     .slice(0, 10);
 }
 
+function collectTurnEndBlockers() {
+  const mode = globalThis.uiState.turnEndGuard || "strict";
+  if (mode === "off") return [];
+  const minLevel = mode === "soft" ? 2 : 1;
+  const priority = { danger: 0, warn: 1, good: 2 };
+  return collectAllPriorityActions()
+    .filter((item) => (item.turnBlockLevel ?? 0) >= minLevel)
+    .sort((left, right) => (priority[left.tone] ?? 9) - (priority[right.tone] ?? 9));
+}
+
+function requestEndTurn() {
+  if (globalThis.state.world.pendingEncounter) return;
+  if (typeof turnEventsBlocked === "function" && turnEventsBlocked()) return;
+  const mode = globalThis.uiState.turnEndGuard || "strict";
+  if (mode === "off") {
+    nextTurn();
+    return;
+  }
+  const blockers = collectTurnEndBlockers();
+  if (!blockers.length) {
+    nextTurn();
+    return;
+  }
+  globalThis.uiState.turnEndModalOpen = true;
+  globalThis.render();
+}
+
 function focusRaiseScoutAction() {
-  uiState.selectedHexId = state.world.startTileId;
-  state.view = "world";
-  uiState.focusRequest = {
+  globalThis.uiState.selectedHexId = globalThis.state.world.startTileId;
+  globalThis.state.view = "world";
+  globalThis.uiState.focusRequest = {
     selector: "#action-raise-scout",
     fallbackSelector: ".hex-inspector",
   };
-  render();
+  globalThis.render();
 }
 
 function focusCityWorkforce(cityNameKey) {
-  state.selectedCity = cityNameKey;
-  state.view = "city";
-  uiState.focusRequest = {
+  globalThis.state.selectedCity = cityNameKey;
+  globalThis.state.view = "city";
+  globalThis.uiState.focusRequest = {
     selector: "#city-workforce-section",
     fallbackSelector: ".city-district-band",
   };
-  render();
+  globalThis.render();
 }
 
 function renderPriorityActionsPanel(actions = collectPriorityActions()) {
   const wrap = el("div", { className: "policy-list priority-list" });
   if (!actions.length) {
-    wrap.appendChild(el("div", { className: "empty-note" }, t("priorityActionsEmpty")));
+    wrap.appendChild(el("div", { className: "empty-note" }, globalThis.t("priorityActionsEmpty")));
     return wrap;
   }
 
@@ -245,110 +349,135 @@ function renderPriorityActionsPanel(actions = collectPriorityActions()) {
 }
 
 function renderSidebar() {
-  const panel = el("div", { className: "panel soft sidebar-panel" });
-  panel.appendChild(el("h2", {}, t("empire")));
-  const resources = el("div", { className: "resource-grid" });
-  [
-    [t("gold"), state.player.gold],
-    [t("culture"), state.player.culture],
-    [t("metricFood"), totalEmpireFood()],
-    [t("tradePower"), state.world.tradePower],
-    [t("prestige"), state.world.prestige],
-    [t("diplomacy"), state.world.diplomacy],
-    [t("crisis"), state.world.crisisPressure],
-  ].forEach(([labelText, value]) => {
-    const card = el("div", { className: "resource-card" });
+  const panel = el("div", { className: "panel soft sidebar-panel empire-drawer-panel" });
+  panel.appendChild(el("h2", { className: "empire-drawer-title" }, globalThis.t("empire")));
+  const resources = el("div", { className: "resource-grid empire-metric-grid" });
+  const empireMetrics = [
+    [globalThis.t("gold"), globalThis.state.player.gold],
+    [globalThis.t("culture"), globalThis.state.player.culture],
+    [globalThis.t("metricFood"), totalEmpireFood()],
+    [globalThis.t("tradePower"), globalThis.state.world.tradePower],
+    [globalThis.t("prestige"), globalThis.state.world.prestige],
+    [globalThis.t("diplomacy"), globalThis.state.world.diplomacy],
+    [globalThis.t("crisis"), globalThis.state.world.crisisPressure],
+  ];
+  empireMetrics.forEach(([labelText, value]) => {
+    const card = el("div", { className: "resource-card empire-metric-card" });
     appendChildren(card, el("strong", {}, labelText), el("div", { className: "value" }, String(value)));
     resources.appendChild(card);
   });
   panel.appendChild(resources);
 
-  panel.appendChild(sectionTitle(t("empireResourcesTitle")));
-  const resourceList = el("div", { className: "policy-list" });
-  const connectedResources = Object.keys(state.player.resources || {}).filter((resourceId) => getPlayerResourceCount(resourceId) > 0);
+  const body = el("div", { className: "empire-drawer-body" });
+
+  const colResources = el("div", { className: "empire-drawer-column empire-drawer-col-resources" });
+  colResources.appendChild(sectionTitle(globalThis.t("empireResourcesTitle")));
+  const resourceList = el("div", { className: "policy-list empire-connected-resources-list" });
+  const connectedResources = Object.keys(globalThis.state.player.resources || {}).filter((resourceId) => getPlayerResourceCount(resourceId) > 0);
   if (!connectedResources.length) {
-    resourceList.appendChild(el("div", { className: "empty-note" }, t("noEmpireResources")));
+    resourceList.appendChild(el("div", { className: "empty-note" }, globalThis.t("noEmpireResources")));
   } else {
     connectedResources.forEach((resourceId) => {
       const row = el("div", { className: "policy-row" });
       appendChildren(row, 
         el("strong", {}, `${resourceGlyph(resourceId)} ${getResourceDisplayName(resourceId)}`),
-        el("div", { className: "label" }, t("resourceCountLine", { total: getPlayerResourceCount(resourceId), free: getResourceSurplus(resourceId) })),
+        el("div", { className: "label" }, globalThis.t("resourceCountLine", { total: getPlayerResourceCount(resourceId), free: getResourceSurplus(resourceId) })),
         el("div", { className: "label" }, getResourceEffectText(resourceId)),
         getResourceUnlockedBuildingsText(resourceId) ? el("div", { className: "label" }, getResourceUnlockedBuildingsText(resourceId)) : null,
         getResourceUnlockedTechsText(resourceId) ? el("div", { className: "label" }, getResourceUnlockedTechsText(resourceId)) : null,
-        getResourceSynergyText(resourceId) ? el("div", { className: "label" }, t("resourceChainBonus", { value: getResourceSynergyText(resourceId) })) : null,
+        getResourceSynergyText(resourceId) ? el("div", { className: "label" }, globalThis.t("resourceChainBonus", { value: getResourceSynergyText(resourceId) })) : null,
       );
       resourceList.appendChild(row);
     });
   }
-  panel.appendChild(resourceList);
+  colResources.appendChild(resourceList);
 
-  panel.appendChild(sectionTitle(t("cities")));
+  const colCities = el("div", { className: "empire-drawer-column empire-drawer-col-cities" });
+  colCities.appendChild(sectionTitle(globalThis.t("cities")));
   const cityList = el("div", { className: "city-list" });
-  state.player.cities.forEach((city) => {
+  globalThis.state.player.cities.forEach((city) => {
     const row = el("div", { className: "city-row" });
     const info = citySummary(city);
-    appendChildren(row, 
-      el("strong", {}, `${city.isCapital ? `${t("capitalTag")} ` : ""}${getCityName(city)}`),
-      el("div", { className: "label" }, t("cityLine1", { role: getRoleName(city), population: city.population, cap: city.populationCap })),
-      el("div", { className: "label" }, t("cityLine2", { food: city.foodStock, foodCap: city.foodCap, hammers: city.hammerStock, hammerCap: city.hammerCap })),
-      el("div", { className: "label" }, t("cityLine3", { value: info })),
-      button(city.nameKey === state.selectedCity && state.view === "city" ? t("opened") : t("openCity"), () => openCity(city.nameKey), city.nameKey === state.selectedCity && state.view === "city"),
+    appendChildren(row,
+      el("strong", {}, `${city.isCapital ? `${globalThis.t("capitalTag")} ` : ""}${getCityName(city)}`),
+      el("div", { className: "label" }, city.isCapital
+        ? globalThis.t("cityLinePopOnly", { population: city.population, cap: city.populationCap })
+        : globalThis.t("cityLine1", { role: getRoleName(city), population: city.population, cap: city.populationCap })),
+      el("div", { className: "label" }, globalThis.t("cityLine2", { food: city.foodStock, foodCap: city.foodCap, hammers: city.hammerStock, hammerCap: city.hammerCap })),
+      el("div", { className: "label" }, globalThis.t("cityLine3", { value: info })),
+      button(city.nameKey === globalThis.state.selectedCity && globalThis.state.view === "city" ? globalThis.t("opened") : globalThis.t("openCity"), () => openCity(city.nameKey), city.nameKey === globalThis.state.selectedCity && globalThis.state.view === "city"),
     );
     cityList.appendChild(row);
   });
-  panel.appendChild(cityList);
+  colCities.appendChild(cityList);
 
-  panel.appendChild(sectionTitle(t("policies")));
-  const policyList = el("div", { className: "policy-list" });
+  const colPolicies = el("div", { className: "empire-drawer-column empire-drawer-col-policies" });
+  colPolicies.appendChild(sectionTitle(globalThis.t("policies")));
+  colPolicies.appendChild(el("div", { className: "label muted empire-policies-hint" }, globalThis.t("policiesEmpireHint")));
+  const policyList = el("div", { className: "policy-list empire-policy-grid" });
   POLICIES.forEach((policy) => {
-    const available = policy.available(state);
+    const available = policy.available(globalThis.state);
     const row = el("div", { className: "policy-row" });
     appendChildren(row, 
-      el("strong", {}, t(policy.nameKey)),
-      el("div", { className: "label" }, t(policy.descriptionKey)),
-      button(t("policyUse", { cost: policy.cost }), () => applyPolicy(policy.id), !available),
+      el("strong", {}, globalThis.t(policy.nameKey)),
+      el("div", { className: "label" }, globalThis.t(policy.descriptionKey)),
+      button(globalThis.t("policyUse", { cost: policy.cost }), () => applyPolicy(policy.id), !available),
     );
     policyList.appendChild(row);
   });
-  panel.appendChild(policyList);
+  colPolicies.appendChild(policyList);
+
+  appendChildren(body, colResources, colCities, colPolicies);
+  panel.appendChild(body);
 
   return panel;
 }
 
 function renderMainStage() {
   const stage = el("div", { className: "main-stage hud-main-stage" });
-  const content = el("div", { className: `hud-stage-content ${state.view === "world" ? "hud-stage-content-world" : ""} hud-preset-${uiState.hudPreset}` });
-  content.appendChild(state.view === "world" ? renderWorldView() : renderCityView(getSelectedCity()));
+  const content = el("div", { className: `hud-stage-content ${globalThis.state.view === "world" ? "hud-stage-content-world" : ""} hud-preset-${globalThis.uiState.hudPreset}` });
+  content.appendChild(globalThis.state.view === "world" ? renderWorldView() : renderCityView(getSelectedCity()));
   stage.appendChild(content);
-  stage.appendChild(renderHudDock());
-  if (uiState.hudPanelOpen) {
+  if (globalThis.state.view !== "world") {
+    stage.appendChild(renderHudDock());
+  }
+  if (globalThis.uiState.hudPanelOpen) {
     stage.appendChild(renderHudOverlayPanel());
   }
   return stage;
 }
 
 function renderHudDock() {
-  const wrap = el("div", { className: "hud-dock" });
-  appendChildren(
-    wrap,
-    button(t("empire"), () => openHudPanel("empire"), false),
-  );
+  const wrap = el("div", { className: "hud-dock", role: "toolbar", "aria-label": globalThis.t("hudEmpireDockLabel") });
+  const empireBtn = el("button", {
+    type: "button",
+    className: `hud-dock-empire-btn ${globalThis.uiState.hudPanelOpen && globalThis.uiState.hudPanelTab === "empire" ? "hud-dock-active" : ""}`.trim(),
+    "aria-label": globalThis.t("hudEmpireButtonAria"),
+    title: globalThis.t("hudEmpireButtonAria"),
+  });
+  const icon = iconNode("capital");
+  icon.setAttribute("aria-hidden", "true");
+  empireBtn.appendChild(icon);
+  empireBtn.addEventListener("click", () => {
+    globalThis.tryStartMusic();
+    globalThis.playButtonClickSound();
+    openHudPanel("empire");
+  });
+  wrap.appendChild(empireBtn);
   return wrap;
 }
 
 function renderHudOverlayPanel() {
-  const frame = el("div", { className: "hud-overlay-panel-frame" });
-  const closeBtn = button(t("close"), () => {
-    uiState.hudPanelOpen = false;
-    render();
+  const frame = el("div", { className: "hud-overlay-panel-frame hud-overlay-frame--wide" });
+  const closeBtn = button(globalThis.t("close"), () => {
+    globalThis.uiState.hudPanelOpen = false;
+    globalThis.render();
   }, false);
   closeBtn.classList.add("hud-overlay-close");
 
   const panel = renderSidebar();
   panel.classList.add("hud-overlay-panel");
-  if (uiState.hudPanelTab === "alerts") {
+  if (globalThis.uiState.hudPanelTab === "alerts") {
     panel.classList.add("hud-overlay-alerts");
   }
   frame.appendChild(closeBtn);
@@ -357,9 +486,24 @@ function renderHudOverlayPanel() {
 }
 
 function openHudPanel(tab) {
-  uiState.hudPanelTab = tab;
-  uiState.hudPanelOpen = true;
-  uiState.headerMenuOpen = false;
-  render();
+  globalThis.uiState.hudPanelTab = tab;
+  globalThis.uiState.hudPanelOpen = true;
+  globalThis.uiState.headerMenuOpen = false;
+  globalThis.render();
 }
 
+Object.assign(globalThis, {
+  collectAllPriorityActions,
+  collectPriorityActions,
+  collectTurnEndBlockers,
+  requestEndTurn,
+  focusRaiseScoutAction,
+  focusCityWorkforce,
+  renderPriorityActionsPanel,
+  renderHeader,
+  renderSidebar,
+  renderMainStage,
+  renderHudDock,
+  renderHudOverlayPanel,
+  openHudPanel,
+});

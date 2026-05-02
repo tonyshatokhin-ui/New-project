@@ -3,7 +3,13 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 8px 10px 10px;
+  padding: 6px 10px 8px;
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
 }
 
 .header {
@@ -11,14 +17,36 @@
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+.game-header--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.header-victory-hint {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.9;
+  padding: 0 2px 2px;
+  max-width: 100%;
 }
 
 .game-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 35;
-  padding: 6px 0;
+  padding: 4px 0;
   backdrop-filter: blur(6px);
 }
 
@@ -31,17 +59,35 @@
   font-weight: 700;
   font-size: 0.8rem;
   white-space: nowrap;
+  transition: box-shadow 0.24s var(--ease-ui, ease), border-color 0.24s var(--ease-ui, ease);
+}
+
+.shell-turn-transition .header-turn-pill {
+  border-color: rgba(255, 209, 102, 0.55);
+  animation: headerTurnPillPulse 0.75s var(--ease-ui, ease-out) 1;
+}
+
+@keyframes headerTurnPillPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.45); }
+  100% { box-shadow: 0 0 0 14px rgba(255, 209, 102, 0); }
+}
+
+.reduce-motion .shell-turn-transition .header-turn-pill {
+  animation: none !important;
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
-  align-items: start;
+  align-items: stretch;
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .main-stage {
   min-height: 0;
+  height: 100%;
 }
 
 .compact-actions {
@@ -67,8 +113,9 @@
 
 .hud-main-stage {
   position: relative;
-  min-height: calc(100dvh - 78px);
-  max-height: calc(100dvh - 78px);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   overflow: hidden;
 }
 
@@ -99,27 +146,247 @@
   color: #f6e8cc;
 }
 
+.hud-dock button.hud-dock-empire-btn {
+  padding: 0;
+  width: 2.85rem;
+  height: 2.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-dock-empire-btn .map-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.hud-dock-empire-btn.hud-dock-active {
+  border-color: rgba(255, 214, 120, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 214, 120, 0.12);
+}
+
 .hud-overlay-panel-frame {
   position: absolute;
   z-index: 40;
-  left: 12px;
-  top: 56px;
-  width: min(360px, 92vw);
-  max-height: calc(100% - 68px);
-  display: grid;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  top: 48px;
+  width: auto;
+  max-height: calc(100vh - 56px);
+  max-height: calc(100dvh - 56px);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  align-items: stretch;
+  animation: hudOverlayEnter 0.22s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes hudOverlayEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reduce-motion .hud-overlay-panel-frame {
+  animation: none;
+}
+
+.hud-overlay-frame--wide {
+  max-width: none;
 }
 
 .hud-overlay-close {
-  justify-self: start;
+  align-self: flex-start;
   padding: 0.4rem 0.7rem;
   border-radius: 999px;
 }
 
 .hud-overlay-panel.sidebar-panel {
-  max-height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
   padding-top: 12px;
+}
+
+/* Empire drawer — wide horizontal body, minimal vertical scroll */
+.hud-overlay-panel.empire-drawer-panel.sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 14px;
+  overflow: hidden;
+}
+
+.hud-overlay-panel.empire-drawer-panel .empire-drawer-title {
+  margin: 0 0 8px !important;
+  flex-shrink: 0;
+  font-size: 1.15rem !important;
+  letter-spacing: 0.05em;
+}
+
+.hud-overlay-panel .empire-metric-grid.resource-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+
+.hud-overlay-panel .empire-metric-grid .empire-metric-card {
+  padding: 6px 8px;
+  border-radius: 10px;
+  min-height: 0;
+}
+
+.hud-overlay-panel .empire-metric-grid .empire-metric-card strong {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  color: rgba(248, 232, 204, 0.75);
+  line-height: 1.2;
+}
+
+.hud-overlay-panel .empire-metric-grid .empire-metric-card .value {
+  margin-top: 2px;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.hud-overlay-panel .empire-drawer-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(240px, 1.15fr) minmax(260px, 1.2fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.hud-overlay-panel .empire-drawer-column {
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hud-overlay-panel .empire-drawer-column > .empire-connected-resources-list,
+.hud-overlay-panel .empire-drawer-column > .city-list {
+  display: grid;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hud-overlay-panel .empire-drawer-column > .empire-policy-grid {
+  flex: 0 1 auto;
+  overflow: visible;
+}
+
+.hud-overlay-panel .empire-drawer-column > .section-head {
+  flex-shrink: 0;
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+
+.hud-overlay-panel .section-head h3 {
+  margin: 0 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: "Manrope", system-ui, sans-serif;
+  color: rgba(255, 210, 150, 0.9);
+}
+
+.hud-overlay-panel .empire-policies-hint {
+  font-size: 0.76rem !important;
+  line-height: 1.35;
+  margin: 0 0 6px !important;
+}
+
+.hud-overlay-panel .empire-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  overflow: visible;
+  align-content: start;
+}
+
+.hud-overlay-panel .empire-policy-grid .policy-row {
+  padding: 8px 10px;
+}
+
+.hud-overlay-panel .city-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.hud-overlay-panel .city-row {
+  padding: 9px 11px;
+  display: grid;
+  gap: 4px;
+  border-radius: 12px;
+}
+
+.hud-overlay-panel .city-row .label {
+  font-size: 0.78rem;
+  line-height: 1.32;
+}
+
+.hud-overlay-panel .city-row strong {
+  font-size: 0.94rem;
+}
+
+.hud-overlay-panel .city-row button {
+  margin-top: 6px;
+  justify-self: start;
+}
+
+.hud-overlay-panel .policy-row {
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+@media (max-width: 760px) {
+  .hud-overlay-panel .empire-drawer-body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+    max-height: min(520px, 70dvh);
+  }
+
+  .hud-overlay-panel .empire-metric-grid.resource-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hud-overlay-panel .empire-policy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .hud-overlay-panel .empire-metric-grid.resource-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Reserve space for fixed HUD dock on city; world map keeps empire inside the map panel */
+.hud-stage-content:not(.hud-stage-content-world) .city-panel.active-stage-panel:not(.inspect-mode),
+.hud-stage-content:not(.hud-stage-content-world) .world-panel.world-panel--compact.panel {
+  padding-top: 52px;
+  padding-inline-start: min(112px, 30vw);
+}
+
+.hud-stage-content-world .world-panel.world-panel--compact.panel {
+  padding-top: 10px;
+  padding-inline-start: 10px;
 }
 
 .header-menu-wrap {

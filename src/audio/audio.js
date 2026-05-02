@@ -50,15 +50,15 @@ function tryStartMusic() {
   if (context?.state === "suspended") {
     context.resume().catch(() => {});
   }
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   bgMusic.muted = false;
   bgMusic.play().then(() => {
-    uiState.audioReady = true;
+    globalThis.uiState.audioReady = true;
   }).catch(() => {});
 }
 
 function playDefeatSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   try {
     defeatSound.currentTime = 0;
     defeatSound.play().catch(() => {});
@@ -66,7 +66,7 @@ function playDefeatSound() {
 }
 
 function playSuccessSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const context = getSharedAudioContext();
   if (!context) return;
   try {
@@ -75,7 +75,7 @@ function playSuccessSound() {
 }
 
 function playScoutMoveSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const context = getSharedAudioContext();
   if (!context) return;
   try {
@@ -107,7 +107,7 @@ function playScoutMoveSound() {
 }
 
 function playButtonClickSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const context = getSharedAudioContext();
   if (!context) return;
   try {
@@ -116,7 +116,7 @@ function playButtonClickSound() {
 }
 
 function playTurnAdvanceSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const context = getSharedAudioContext();
   if (!context) return;
   try {
@@ -127,7 +127,7 @@ function playTurnAdvanceSound() {
 }
 
 function playTileSelectSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const context = getSharedAudioContext();
   if (!context) return;
   try {
@@ -137,7 +137,7 @@ function playTileSelectSound() {
 }
 
 function playSliderTickSound() {
-  if (!uiState.musicOn) return;
+  if (!globalThis.uiState.musicOn) return;
   const now = performance.now();
   if (now - lastSliderSoundAt < 45) return;
   lastSliderSoundAt = now;
@@ -147,3 +147,14 @@ function playSliderTickSound() {
     createUiVoice(context, { type: "triangle", frequency: 260, frequencyEnd: 285, duration: 0.045, gainPeak: 0.02 });
   } catch (_) {}
 }
+
+Object.assign(globalThis, {
+  tryStartMusic,
+  playDefeatSound,
+  playSuccessSound,
+  playScoutMoveSound,
+  playButtonClickSound,
+  playTurnAdvanceSound,
+  playTileSelectSound,
+  playSliderTickSound,
+});

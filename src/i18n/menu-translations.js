@@ -1,0 +1,43 @@
+Object.assign(globalThis.I18N.en, {
+  menuKicker: "800 BCE | Tyrrhenian dawn",
+  menuSubtitle: "Guide Aurelia from a river settlement into the first bright architecture of law, grain, bronze, and memory.",
+  startGame: "Start Playing",
+  mainMenu: "Main Menu",
+  backToMenu: "Back to Menu",
+  settingsTitle: "Settings",
+  languageTitle: "Language",
+  advisorTips: "Advisor tips",
+  compactUi: "Compact interface",
+  reduceMotion: "Reduced motion",
+  menuAdvisorTip: "Advisor: secure food first, then send scouts toward rivers, copper, and the sea.",
+  introTitle: "Aurelia, Before the Crown",
+  enterAurelia: "Enter Aurelia",
+  introParagraphs: [
+    "In the year 800 before our era, where the western hills lean toward the warm Italian sea, the city of Aurelia wakes beneath a sky the color of hammered bronze.",
+    "Smoke rises from clay hearths. Oxen carve dark lines into the river plain. Around the first timber palisade, families gather with seed, salt, copper charms, and the names of ancestors carried like fire in the mouth.",
+    "There is no empire yet, no marble road, no senate voice echoing over stone. There is only a ford, a hill, a granary, and the stubborn belief that people can bind hunger, fear, and wandering into one shared law.",
+    "As the sun climbs, it gilds the roofs of Aurelia and the river answers in light. Here the cradle of civilization begins to rise: not as a monument, but as a promise that fields will become streets, streets will become memory, and memory will become a crown.",
+  ],
+});
+
+Object.assign(globalThis.I18N.ru, {
+  menuKicker: "800 год до н. э. | тирренский рассвет",
+  menuSubtitle: "Проведите Аурелию от речного поселения к первой яркой архитектуре закона, зерна, бронзы и памяти.",
+  startGame: "Начать играть",
+  mainMenu: "Главное меню",
+  backToMenu: "Назад в меню",
+  settingsTitle: "Настройки",
+  languageTitle: "Язык",
+  advisorTips: "Советы советника",
+  compactUi: "Компактный интерфейс",
+  reduceMotion: "Меньше анимаций",
+  menuAdvisorTip: "Советник: сначала укрепите пищу, затем отправляйте разведчиков к рекам, меди и морю.",
+  introTitle: "Аурелия до короны",
+  enterAurelia: "Войти в Аурелию",
+  introParagraphs: [
+    "В 800 году до нашей эры, там, где западные холмы Италии склоняются к теплому морю, город Аурелия просыпается под небом цвета выкованной бронзы.",
+    "Над глиняными очагами поднимается дым. Волы режут темные борозды на речной равнине. У первого частокола собираются семьи с зерном, солью, медными оберегами и именами предков, которые хранят во рту как огонь.",
+    "Еще нет империи, нет мраморных дорог, нет голоса сената, отраженного камнем. Есть только брод, холм, амбар и упрямая вера в то, что люди способны связать голод, страх и скитания единым законом.",
+    "Когда солнце поднимается, оно золотит крыши Аурелии, и река отвечает светом. Здесь восходит колыбель цивилизации: не как памятник, а как обещание, что поля станут улицами, улицы станут памятью, а память станет короной.",
+  ],
+});

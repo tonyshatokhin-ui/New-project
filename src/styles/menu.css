@@ -1,0 +1,143 @@
+.menu-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(90deg, rgba(29, 17, 10, 0.92), rgba(51, 32, 20, 0.72)),
+    url("../../world-map-graphic-icons-smoke.png") center / cover;
+}
+
+.menu-panel {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+  padding: clamp(22px, 5vw, 44px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(54, 34, 22, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.menu-kicker {
+  color: var(--accent-2);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.menu-panel h1 {
+  margin: 8px 0 10px;
+  font-family: "Cinzel", serif;
+  font-size: clamp(2.5rem, 8vw, 5.3rem);
+  line-height: 0.95;
+  color: #fff6dc;
+}
+
+.menu-panel h2 {
+  margin: 0 0 14px;
+  font-family: "Cinzel", serif;
+  color: var(--accent);
+}
+
+.menu-subtitle {
+  max-width: 58ch;
+  margin: 0 0 24px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.menu-actions,
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.menu-actions {
+  margin: 22px 0;
+}
+
+.menu-settings,
+.story-panel {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+.story-panel p {
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 1.02rem;
+}
+
+.settings-row {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 226, 181, 0.12);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.toggle-row {
+  cursor: pointer;
+}
+
+.settings-row input[type="checkbox"] {
+  width: 44px;
+  height: 24px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.menu-advisor {
+  margin: 18px 0 0;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.compact-ui .tile {
+  min-height: 110px;
+  padding: 12px;
+}
+
+.compact-ui .panel {
+  padding: 14px;
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (max-width: 640px) {
+  .menu-screen {
+    padding: 14px;
+    place-items: stretch;
+  }
+
+  .menu-panel {
+    max-height: none;
+  }
+
+  .settings-row,
+  .menu-actions,
+  .segmented {
+    align-items: stretch;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    padding: 14px 0;
+  }
+
+  .menu-actions button,
+  .segmented button {
+    flex: 1 1 150px;
+  }
+}

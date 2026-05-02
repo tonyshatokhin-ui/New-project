@@ -1,10 +1,15 @@
 function nextTurn() {
-  if (state.world.pendingEncounter) return;
-  state.turn += 1;
-  if (typeof playTurnAdvanceSound === "function") playTurnAdvanceSound();
+  if (globalThis.state.world.pendingEncounter) return;
+  if (typeof turnEventsBlocked === "function" && turnEventsBlocked()) return;
+  const turnMetricsBefore = typeof snapshotEmpireTurnMetrics === "function"
+    ? snapshotEmpireTurnMetrics()
+    : null;
+  globalThis.state.turn += 1;
+  if (typeof globalThis.playTurnAdvanceSound === "function") globalThis.playTurnAdvanceSound();
 
-  state.player.cities.forEach((city) => {
+  globalThis.state.player.cities.forEach((city) => {
     normalizeCitySocial(city);
+    tickSocialSavings(city);
     processSocialMobility(city);
     maybeQueueSocialMobility(city);
 
@@ -12,9 +17,19 @@ function nextTurn() {
       city.workerTrainingTurns -= 1;
       if (city.workerTrainingTurns <= 0) {
         const worker = createWorkerUnit(city.tileId, city.nameKey);
-        state.world.units.push(worker);
-        uiState.selectedArmyId = worker.id;
-        pushLog(state, "workerReadyLog", { city: getCityName(city) });
+        globalThis.state.world.units.push(worker);
+        globalThis.uiState.selectedArmyId = worker.id;
+        pushLog(globalThis.state, "workerReadyLog", { city: getCityName(city) });
+      }
+    }
+
+    if (city.settlerTrainingTurns > 0) {
+      city.settlerTrainingTurns -= 1;
+      if (city.settlerTrainingTurns <= 0) {
+        const settler = createSettlerUnit(city.tileId, city.nameKey);
+        globalThis.state.world.units.push(settler);
+        globalThis.uiState.selectedArmyId = settler.id;
+        pushLog(globalThis.state, "settlerReadyLog", { city: getCityName(city) });
       }
     }
     const yieldData = computeCityYield(city);
@@ -31,31 +46,31 @@ function nextTurn() {
     if (city.shipPoints >= city.shipCost && city.ships < city.shipCap) {
       city.shipPoints -= city.shipCost;
       city.ships += 1;
-      pushLog(state, "newTradeShip", { city: getCityName(city) });
+      pushLog(globalThis.state, "newTradeShip", { city: getCityName(city) });
     }
 
-    state.player.gold = clampGoldBalance(state.player.gold + yieldData.gold);
-    state.player.culture += yieldData.culture;
-    state.world.prestige = Math.min(100, state.world.prestige + yieldData.templeInfluence);
-    state.world.prestige = Math.min(100, state.world.prestige + (yieldData.prestige || 0));
-    state.world.diplomacy = Math.min(100, state.world.diplomacy + (yieldData.diplomacy || 0));
+    globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold + yieldData.gold);
+    globalThis.state.player.culture += yieldData.culture;
+    globalThis.state.world.prestige = Math.min(100, globalThis.state.world.prestige + yieldData.templeInfluence);
+    globalThis.state.world.prestige = Math.min(100, globalThis.state.world.prestige + (yieldData.prestige || 0));
+    globalThis.state.world.diplomacy = Math.min(100, globalThis.state.world.diplomacy + (yieldData.diplomacy || 0));
     city.recruitProgress = clamp(city.recruitProgress + yieldData.soldiers, 0, 9.9);
     while (
       city.recruitProgress >= 1
       && city.soldiers < city.soldierCap
-      && state.player.gold >= getSoldierRecruitGoldCost(city.soldiers + 1)
+      && globalThis.state.player.gold >= getSoldierRecruitGoldCost(city.soldiers + 1)
       && city.foodStock >= getSoldierRecruitFoodCost(city.soldiers + 1)
     ) {
       city.recruitProgress -= 1;
       city.soldiers += 1;
-      state.player.gold = clampGoldBalance(state.player.gold - getSoldierRecruitGoldCost(city.soldiers));
+      globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold - getSoldierRecruitGoldCost(city.soldiers));
       city.foodStock = Math.max(0, city.foodStock - getSoldierRecruitFoodCost(city.soldiers));
     }
 
     handleGrowth(city, foodSurplusForCity(yieldData, city));
     handleFoodStatus(city, rawFoodStock);
     normalizeCitySocial(city);
-    if (RANDOM_EVENTS_ENABLED) {
+    if (globalThis.state.turn >= 12 || RANDOM_EVENTS_ENABLED) {
       handleCityCrisis(city, foodDelta);
     }
     processCityConstructionQueueAtTurnEnd(city);
@@ -65,18 +80,49 @@ function nextTurn() {
   processDebtPressure();
   updateWorldPressure();
   processScoutTurn();
+  if (typeof processFieldArmyTurn === "function") {
+    processFieldArmyTurn();
+  }
   processWorkerTurn();
   processHostileFrontier();
   processHostileRaiders();
-  revealPlayerTerritory(state.world, state.player.cities, 1);
-  refreshFactionKnowledge(state.world);
-  if (RANDOM_EVENTS_ENABLED) {
+  revealPlayerTerritory(globalThis.state.world, globalThis.state.player.cities, 1);
+  refreshFactionKnowledge(globalThis.state.world);
+  if (globalThis.state.turn >= 14 || RANDOM_EVENTS_ENABLED) {
     maybeWorldCrisis();
+  }
+  if (typeof tickRivalStandingSimulation === "function") {
+    tickRivalStandingSimulation();
+  }
+  if (typeof tryResolveRunOutcome === "function") {
+    tryResolveRunOutcome();
+  }
+  if (typeof rollNarrativeTurnEvents === "function") {
+    rollNarrativeTurnEvents();
+  }
+  if (typeof finalizeTurnEventsForUi === "function") {
+    finalizeTurnEventsForUi();
   }
   if (typeof triggerTurnFeedback === "function") {
     triggerTurnFeedback();
   }
-  render();
+  if (turnMetricsBefore && typeof buildTurnSummary === "function") {
+    const after = snapshotEmpireTurnMetrics();
+    globalThis.state.turnSummary = buildTurnSummary(turnMetricsBefore, after);
+    const showSummary =
+      typeof turnEventQueueClearForSummary === "function" ? turnEventQueueClearForSummary() : true;
+    globalThis.uiState.turnSummaryOpen = Boolean(showSummary);
+  }
+  if (typeof processMidGamePulse === "function") {
+    processMidGamePulse();
+  }
+  if (typeof maybeFirstContactUiTips === "function") {
+    maybeFirstContactUiTips();
+  }
+  if (typeof hookOnboardingTurnEnded === "function") {
+    hookOnboardingTurnEnded();
+  }
+  globalThis.render();
 }
 
 function computeCityYield(city) {
@@ -98,7 +144,7 @@ function computeCityYield(city) {
       growthBonus: 0,
       diplomacy: 0,
       prestige: 0,
-      templeInfluence: city.assignments.temples * state.globalBonuses.templeInfluence,
+      templeInfluence: city.assignments.temples * globalThis.state.globalBonuses.templeInfluence,
     },
   );
   const directiveBonus = getCityDirective(city).apply(city);
@@ -120,8 +166,8 @@ function computeCityYield(city) {
   const idleCitizens = Math.max(0, city.population - assignedWorkers(city));
   totals.gold += Math.floor(idleCitizens / 2);
   totals.gold -= getBuildingUpkeep(city);
-  totals.gold -= getArmyGoldUpkeep(city.soldiers);
-  if (state.player.gold < 0) {
+  totals.gold -= getArmyGoldUpkeep(city.soldiers + getFieldArmySoldiersForCity(city.nameKey));
+  if (globalThis.state.player.gold < 0) {
     totals.food -= getDebtFoodPenalty();
   }
   applySocialEffects(city, totals);
@@ -135,32 +181,32 @@ function getBuildingUpkeep(city) {
 function buildingUpkeepForId(buildingId) {
   const costs = {
     "storehouse": 1,
-    "granary": 1,
-    "houses": 1,
-    "workshop": 2,
-    "market-square": 1,
-    "shrine": 1,
-    "dock": 2,
-    "training-ground": 2,
+    "granary": 2,
+    "houses": 2,
+    "workshop": 5,
+    "market-square": 2,
+    "shrine": 2,
+    "dock": 3,
+    "training-ground": 6,
   };
   return costs[buildingId] || 0;
 }
 
 function getDebtFoodPenalty() {
   // Debt still hurts, but ramps up slower to avoid instant death spirals.
-  return Math.min(2, 1 + Math.floor(Math.max(0, Math.abs(state.player.gold) - 1) / 35));
+  return Math.min(2, 1 + Math.floor(Math.max(0, Math.abs(globalThis.state.player.gold) - 1) / 35));
 }
 
 function processDebtPressure() {
-  if (state.player.gold >= 0) return;
-  const scouts = state.world.units.filter((unit) => unit.type === "scout");
+  if (globalThis.state.player.gold >= 0) return;
+  const scouts = globalThis.state.world.units.filter((unit) => unit.type === "scout");
   if (!scouts.length) return;
-  const leaveChance = clamp(25 + Math.floor(Math.abs(state.player.gold) / 4), 25, 75);
+  const leaveChance = clamp(25 + Math.floor(Math.abs(globalThis.state.player.gold) / 4), 25, 75);
   if (Math.random() * 100 > leaveChance) return;
   const [lostScout] = scouts;
-  state.world.units = state.world.units.filter((unit) => unit.id !== lostScout.id);
-  pushLog(state, "debtScoutLeave");
-  showToast(t("debtScoutLeave"), "warn");
+  globalThis.state.world.units = globalThis.state.world.units.filter((unit) => unit.id !== lostScout.id);
+  pushLog(globalThis.state, "debtScoutLeave");
+  showToast(globalThis.t("debtScoutLeave"), "warn");
 }
 
 function handleGrowth(city, foodSurplus) {
@@ -175,7 +221,7 @@ function handleGrowth(city, foodSurplus) {
   while (city.growthProgress >= growthNeed && city.population < city.populationCap) {
     city.growthProgress -= growthNeed;
     city.population += 1;
-    pushLog(state, "cityGrowth", { city: getCityName(city), population: city.population });
+    pushLog(globalThis.state, "cityGrowth", { city: getCityName(city), population: city.population });
   }
 
   if (city.population >= city.populationCap) {
@@ -187,7 +233,7 @@ function handleFoodStatus(city, rawFoodStock) {
   city.events = [];
   if (rawFoodStock < 0) {
     city.starvationTurns += 1;
-    city.events.push(t("eventHunger"));
+    city.events.push(globalThis.t("eventHunger"));
   } else {
     city.starvationTurns = 0;
   }
@@ -196,7 +242,7 @@ function handleFoodStatus(city, rawFoodStock) {
     city.population -= 1;
     city.starvationTurns = 0;
     unassignOverflow(city);
-    pushLog(state, "famineLoss", { city: getCityName(city) });
+    pushLog(globalThis.state, "famineLoss", { city: getCityName(city) });
   }
 }
 
@@ -204,10 +250,10 @@ function handleCityCrisis(city, foodDelta) {
   let risk = 0;
   if (foodDelta < 0) risk += 25;
   if (city.population >= city.populationCap) risk += 25;
-  if (state.player.gold < 10) risk += 10;
+  if (globalThis.state.player.gold < 10) risk += 10;
   if (city.soldiers < Math.ceil(city.population / 3)) risk += 10;
   if (activeShipsForCity(city.nameKey) > 0) risk += 5 * activeShipsForCity(city.nameKey);
-  risk += Math.floor(state.world.crisisPressure / 5);
+  risk += Math.floor(globalThis.state.world.crisisPressure / 5);
 
   if (Math.random() * 100 <= risk) {
     triggerCityCrisis(city);
@@ -217,37 +263,37 @@ function handleCityCrisis(city, foodDelta) {
 function triggerCityCrisis(city) {
   const crisisPool = [
     {
-      canPay: () => state.player.gold >= 12,
+      canPay: () => globalThis.state.player.gold >= 12,
       pay: () => {
-        state.player.gold -= 12;
-        city.events.push(t("eventRiotCalmed"));
-        pushLog(state, "foodRiotPaid", { city: getCityName(city) });
+        globalThis.state.player.gold -= 12;
+        city.events.push(globalThis.t("eventRiotCalmed"));
+        pushLog(globalThis.state, "foodRiotPaid", { city: getCityName(city) });
       },
       fail: () => {
         if (city.population > 1) city.population -= 1;
         unassignOverflow(city);
-        pushLog(state, "unrestLoss", { city: getCityName(city) });
+        pushLog(globalThis.state, "unrestLoss", { city: getCityName(city) });
       },
     },
     {
-      canPay: () => state.player.gold >= 10,
+      canPay: () => globalThis.state.player.gold >= 10,
       pay: () => {
-        state.player.gold -= 10;
-        city.events.push(t("eventHealers"));
-        pushLog(state, "epidemicPaid", { city: getCityName(city) });
+        globalThis.state.player.gold -= 10;
+        city.events.push(globalThis.t("eventHealers"));
+        pushLog(globalThis.state, "epidemicPaid", { city: getCityName(city) });
       },
       fail: () => {
         if (city.population > 1) city.population -= 1;
         unassignOverflow(city);
-        pushLog(state, "diseaseLoss", { city: getCityName(city) });
+        pushLog(globalThis.state, "diseaseLoss", { city: getCityName(city) });
       },
     },
     {
-      canPay: () => state.player.gold >= 8,
+      canPay: () => globalThis.state.player.gold >= 8,
       pay: () => {
-        state.player.gold -= 8;
-        city.events.push(t("eventRaidPaid"));
-        pushLog(state, "raidPaid", { city: getCityName(city) });
+        globalThis.state.player.gold -= 8;
+        city.events.push(globalThis.t("eventRaidPaid"));
+        pushLog(globalThis.state, "raidPaid", { city: getCityName(city) });
       },
       fail: () => {
         const hammerLoss = Math.min(10, city.hammerStock);
@@ -256,26 +302,26 @@ function triggerCityCrisis(city) {
           city.population -= 1;
           unassignOverflow(city);
         }
-        pushLog(state, "raidLoss", { city: getCityName(city), amount: hammerLoss || 1 });
+        pushLog(globalThis.state, "raidLoss", { city: getCityName(city), amount: hammerLoss || 1 });
       },
     },
   ];
   const crisis = crisisPool[Math.floor(Math.random() * crisisPool.length)];
   if (crisis.canPay()) crisis.pay();
   else crisis.fail();
-  state.world.crisisPressure = Math.min(100, state.world.crisisPressure + 6);
+  globalThis.state.world.crisisPressure = Math.min(100, globalThis.state.world.crisisPressure + 6);
 }
 
 function applyTradeIncome() {
-  Object.entries(state.world.factions).forEach(([factionId, factionState]) => {
+  Object.entries(globalThis.state.world.factions).forEach(([factionId, factionState]) => {
     if (!factionState.tradePact) return;
-    state.player.gold = clampGoldBalance(state.player.gold + 3);
-    state.world.diplomacy = Math.min(100, state.world.diplomacy + 1);
+    globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold + 3);
+    globalThis.state.world.diplomacy = Math.min(100, globalThis.state.world.diplomacy + 1);
     factionState.relation = Math.min(100, factionState.relation + 1);
   });
-  state.world.routes.forEach((route) => {
-    const sourceCity = state.player.cities.find((item) => item.nameKey === route.cityKey);
-    state.player.gold = clampGoldBalance(state.player.gold - (route.upkeepGold || 1));
+  globalThis.state.world.routes.forEach((route) => {
+    const sourceCity = globalThis.state.player.cities.find((item) => item.nameKey === route.cityKey);
+    globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold - (route.upkeepGold || 1));
     if (route.blockedTurns > 0) {
       route.blockedTurns -= 1;
       return;
@@ -283,74 +329,90 @@ function applyTradeIncome() {
     const disruptionChance = getRouteDisruptionChance(route);
     if (Math.random() * 100 < disruptionChance) {
       route.blockedTurns = 1;
-      pushLog(state, "routeDisruptedLog", { route: t(route.nameKey), city: getCityNameByKey(route.cityKey) });
-      showToast(t("routeDisruptedToast", { route: t(route.nameKey) }), "warn");
+      pushLog(globalThis.state, "routeDisruptedLog", { route: globalThis.t(route.nameKey), city: getCityNameByKey(route.cityKey) });
+      showToast(globalThis.t("routeDisruptedToast", { route: globalThis.t(route.nameKey) }), "warn");
       return;
     }
     const marketPenalty = sourceCity && !cityHasBuilding(sourceCity, "market-square") ? 1 : 0;
-    const routeGold = route.effect.gold + state.globalBonuses.tradeGoldBonus - marketPenalty;
-    state.player.gold = clampGoldBalance(state.player.gold + routeGold);
+    const routeGold = route.effect.gold + globalThis.state.globalBonuses.tradeGoldBonus - marketPenalty;
+    globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold + routeGold);
     if (route.effect.food) {
       if (sourceCity) sourceCity.foodStock = clamp(sourceCity.foodStock + route.effect.food, 0, sourceCity.foodCap);
     }
     if (route.effect.hammers) {
       if (sourceCity) sourceCity.hammerStock = clamp(sourceCity.hammerStock + route.effect.hammers, 0, sourceCity.hammerCap);
     }
-    if (route.effect.culture) state.player.culture += route.effect.culture;
-    if (route.effect.diplomacy) state.world.diplomacy = Math.min(100, state.world.diplomacy + route.effect.diplomacy);
-    if (route.effect.prestige) state.world.prestige = Math.min(100, state.world.prestige + route.effect.prestige);
+    if (route.effect.culture) globalThis.state.player.culture += route.effect.culture;
+    if (route.effect.diplomacy) globalThis.state.world.diplomacy = Math.min(100, globalThis.state.world.diplomacy + route.effect.diplomacy);
+    if (route.effect.prestige) globalThis.state.world.prestige = Math.min(100, globalThis.state.world.prestige + route.effect.prestige);
   });
-  state.world.resourceDeals.forEach((deal) => {
-    state.player.gold = clampGoldBalance(state.player.gold + deal.gold);
-    const factionState = state.world.factions[deal.factionId];
+  globalThis.state.world.resourceDeals.forEach((deal) => {
+    globalThis.state.player.gold = clampGoldBalance(globalThis.state.player.gold + deal.gold);
+    const factionState = globalThis.state.world.factions[deal.factionId];
     if (factionState) {
       factionState.relation = Math.min(100, factionState.relation + deal.diplomacy);
     }
-    state.world.diplomacy = Math.min(100, state.world.diplomacy + deal.diplomacy);
+    globalThis.state.world.diplomacy = Math.min(100, globalThis.state.world.diplomacy + deal.diplomacy);
   });
 }
 
 function updateWorldPressure() {
-  const cityCount = state.player.cities.length;
-  state.world.tradePower = state.world.routes.length * 6 + sumCities((city) => city.assignments.market + city.assignments.ports);
-  state.world.warPressure = Math.max(0, 10 + cityCount * 2 - Math.floor(totalSoldiers() / 3));
-  state.world.crisisPressure = clamp(
-    state.world.crisisPressure + Math.max(0, cityCount - 2) + (state.world.warPressure > 15 ? 4 : -2),
+  const cityCount = globalThis.state.player.cities.length;
+  globalThis.state.world.tradePower = globalThis.state.world.routes.length * 6 + sumCities((city) => city.assignments.market + city.assignments.ports);
+  globalThis.state.world.warPressure = Math.max(0, 10 + cityCount * 2 - Math.floor(totalSoldiers() / 3));
+  globalThis.state.world.crisisPressure = clamp(
+    globalThis.state.world.crisisPressure + Math.max(0, cityCount - 2) + (globalThis.state.world.warPressure > 15 ? 4 : -2),
     0,
     100,
   );
 }
 
 function maybeWorldCrisis() {
-  const chance = state.world.crisisPressure + state.world.warPressure / 2;
+  const chance = globalThis.state.world.crisisPressure + globalThis.state.world.warPressure / 2;
   if (Math.random() * 100 > chance) return;
   const outcomes = [
     () => {
-      if (state.player.gold >= 20) {
-        state.player.gold -= 20;
-        pushLog(state, "worldUnrestPaid");
+      if (globalThis.state.player.gold >= 20) {
+        globalThis.state.player.gold -= 20;
+        pushLog(globalThis.state, "worldUnrestPaid");
       } else {
         const city = weakestCity();
         if (city && city.population > 1) {
           city.population -= 1;
           unassignOverflow(city);
-          pushLog(state, "worldCrisisLoss", { city: getCityName(city) });
+          pushLog(globalThis.state, "worldCrisisLoss", { city: getCityName(city) });
         }
       }
     },
     () => {
-      state.world.diplomacy = Math.max(0, state.world.diplomacy - 8);
-      pushLog(state, "rumorLoss");
+      globalThis.state.world.diplomacy = Math.max(0, globalThis.state.world.diplomacy - 8);
+      pushLog(globalThis.state, "rumorLoss");
     },
     () => {
-      if (state.world.routes.length) {
-        const lost = state.world.routes.shift();
-        pushLog(state, "stormLoss", { route: t(lost.nameKey) });
+      if (globalThis.state.world.routes.length) {
+        const lost = globalThis.state.world.routes.shift();
+        pushLog(globalThis.state, "stormLoss", { route: globalThis.t(lost.nameKey) });
       } else {
-        state.world.prestige = Math.max(0, state.world.prestige - 5);
-        pushLog(state, "failedCeremony");
+        globalThis.state.world.prestige = Math.max(0, globalThis.state.world.prestige - 5);
+        pushLog(globalThis.state, "failedCeremony");
       }
     },
   ];
   outcomes[Math.floor(Math.random() * outcomes.length)]();
 }
+
+Object.assign(globalThis, {
+  nextTurn,
+  computeCityYield,
+  getBuildingUpkeep,
+  buildingUpkeepForId,
+  getDebtFoodPenalty,
+  processDebtPressure,
+  handleGrowth,
+  handleFoodStatus,
+  handleCityCrisis,
+  triggerCityCrisis,
+  applyTradeIncome,
+  updateWorldPressure,
+  maybeWorldCrisis,
+});

@@ -274,3 +274,7 @@ function createCityAssetRegistry(THREE) {
     palette,
   };
 }
+
+Object.assign(globalThis, {
+  createCityAssetRegistry,
+});
