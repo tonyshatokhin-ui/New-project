@@ -1,13 +1,176 @@
+/* ==================== ONBOARDING / TURN SUMMARY ==================== */
+.onboarding-banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  background: rgba(61, 38, 24, 0.72);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
+  z-index: 34;
+}
+
+.onboarding-banner-text {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text, #f6e8cc);
+}
+
+.turn-summary-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99997;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(12, 8, 4, 0.72);
+  animation: fadeIn 0.18s forwards;
+}
+
+.turn-summary-panel {
+  width: 100%;
+  max-width: 420px;
+  max-height: min(88vh, 560px);
+  overflow-y: auto;
+  padding: 18px 20px 16px;
+}
+
+.turn-summary-line {
+  margin-top: 6px;
+}
+
+.turn-summary-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ==================== TURN NARRATIVE EVENTS ==================== */
+.log-drawer-backdrop.turn-event-backdrop {
+  justify-content: center;
+  padding: 16px;
+}
+
+.turn-event-drawer {
+  max-width: min(520px, 100%);
+}
+
+.turn-event-prose {
+  line-height: 1.45;
+}
+
+.turn-event-actions .turn-event-action-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.turn-event-actions .turn-event-action-row button {
+  width: 100%;
+}
+
+/* ==================== ENCYCLOPEDIA ==================== */
+.log-drawer-backdrop.encyclopedia-backdrop {
+  justify-content: center;
+  padding: 16px;
+}
+
+.encyclopedia-drawer {
+  max-width: min(720px, 100%);
+  width: 100%;
+}
+
+.encyclopedia-header.tile-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: inherit;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 226, 181, 0.15);
+}
+
+.encyclopedia-scroll {
+  max-height: min(82vh, 720px);
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.encyclopedia-section-title {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 226, 181, 0.85);
+  border-bottom: 1px solid rgba(255, 226, 181, 0.12);
+  padding-bottom: 6px;
+}
+
+.encyclopedia-section-title:first-child {
+  margin-top: 0;
+}
+
+.encyclopedia-lede {
+  margin: 0 0 8px;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.encyclopedia-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 226, 181, 0.14);
+  background: rgba(42, 26, 16, 0.35);
+}
+
+.encyclopedia-card-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.encyclopedia-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.encyclopedia-meta-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.22);
+  color: #f0e0c8;
+}
+
+.encyclopedia-card-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgba(246, 232, 204, 0.92);
+}
+
 /* ==================== DRAWERS / MODALS ==================== */
 .log-drawer-backdrop {
   position: fixed;
   inset: 0;                    /* covers entire screen */
-  background: rgba(20, 12, 5, 0.75);
+  background: rgba(20, 12, 5, 0.82);
   z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: flex-end;   /* slide from right */
-  padding: 20px;
+  padding: 24px;
   opacity: 0;
   animation: fadeIn 0.2s forwards;
 }
@@ -19,7 +182,7 @@
 .log-drawer {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   max-height: 92vh;
   overflow-y: auto;
   background: var(--panel);
@@ -27,16 +190,16 @@
   border-radius: 24px;
   box-shadow: var(--shadow);
   z-index: 100000;
-  animation: slideIn 0.25s ease forwards;
+  animation: drawerSlide 0.22s cubic-bezier(0.33, 1, 0.68, 1) forwards;
 }
 
 .diplomacy-drawer {
-  max-width: 560px;   /* slightly wider for diplomacy */
+  max-width: 580px;
 }
 
-@keyframes slideIn {
+@keyframes drawerSlide {
   from {
-    transform: translateX(40px);
+    transform: translateX(44px);
     opacity: 0;
   }
   to {
@@ -141,48 +304,74 @@
   animation: turnBannerIn 0.15s ease-out, turnBannerOut 0.25s ease-in 1.2s forwards;
 }
 
-/* ==================== DRAWERS (Log + Diplomacy) ==================== */
-.log-drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 12, 5, 0.82);
-  z-index: 99999;
+.run-victory-backdrop {
+  justify-content: center;
+}
+
+.run-victory-actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: flex-end;
-  padding: 24px;
 }
 
-.log-drawer {
-  width: 100%;
-  max-width: 540px;
-  max-height: 92vh;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
+.run-victory-actions button {
+  flex: 1 1 auto;
+  min-width: min(160px, 100%);
+}
+
+.turn-end-guard-backdrop {
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: min(10vh, 72px);
+}
+
+.turn-end-guard-modal {
+  max-width: min(520px, calc(100vw - 24px));
+  max-height: min(86vh, 720px);
   overflow-y: auto;
-  animation: drawerSlide 0.3s ease forwards;
 }
 
-.diplomacy-drawer {
-  max-width: 580px;
+.turn-end-guard-modal .turn-end-guard-intro {
+  margin: 0 0 10px;
+  line-height: 1.35;
 }
 
-@keyframes drawerSlide {
-  from { transform: translateX(60px); opacity: 0; }
-  to   { transform: translateX(0); opacity: 1; }
+.turn-end-guard-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.tile-header {
-  display: flex;
-  justify-content: space-between;
+.turn-end-guard-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px 10px;
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.turn-end-guard-icon {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: center;
+  margin-top: 2px;
 }
 
-/* Policy rows inside drawers look better */
-.policy-row {
-  margin-bottom: 12px;
+.turn-end-guard-icon .map-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.turn-end-guard-row-text strong {
+  font-size: 0.86rem;
+}
+
+.turn-end-guard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 

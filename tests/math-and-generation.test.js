@@ -48,12 +48,13 @@ test("generateHexWorld is deterministic and returns expected dimensions", () => 
     Object,
     Array,
     WORLD_CONFIG: {
-      width: 11,
-      height: 8,
+      width: 13,
+      height: 12,
+      hexFlatRadiusPx: 32,
       revealRadius: 2,
       startingTerritoryRadius: 1,
       frontierRevealPerTurn: 1,
-      playerStart: { q: 5, r: 4 },
+      playerStart: { q: 6, r: 5 },
     },
     FACTIONS: {
       riverClans: { capitalNameKey: "cityMoonDelta" },
@@ -68,9 +69,9 @@ test("generateHexWorld is deterministic and returns expected dimensions", () => 
   const worldA = context.generateHexWorld(2026);
   const worldB = context.generateHexWorld(2026);
 
-  assert.equal(worldA.mapWidth, 11);
-  assert.equal(worldA.mapHeight, 8);
-  assert.equal(worldA.hexTiles.length, 88);
-  assert.equal(worldA.startTileId, "h-5-4");
+  assert.equal(worldA.mapWidth, 13);
+  assert.equal(worldA.mapHeight, 12);
+  assert.equal(worldA.hexTiles.length, 156);
+  assert.equal(worldA.startTileId, "h-6-5");
   assert.deepEqual(worldA, worldB);
 });
